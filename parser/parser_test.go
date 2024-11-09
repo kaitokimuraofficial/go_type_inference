@@ -62,7 +62,7 @@ func TestParse(t *testing.T) {
 			expected: ast.Statement{
 				Expr: ast.IfExpr{
 					Token: token.Token{Type: token.IF, Literal: "if"},
-					Condition:   ast.Boolean{
+					Condition: ast.Boolean{
 						Token: token.Token{Type: token.TRUE, Literal: "true"},
 						Value: true,
 					},

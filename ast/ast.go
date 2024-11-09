@@ -6,7 +6,7 @@ import (
 )
 
 type Node interface {
-	TokenLiteral () string
+	TokenLiteral() string
 	String() string
 }
 
@@ -52,14 +52,14 @@ type Identifier struct {
 }
 
 type BinOpExpr struct {
-	Token token.Token
+	Token    token.Token
 	Left     Expr
 	Operator string
 	Right    Expr
 }
 
 type IfExpr struct {
-	Token token.Token
+	Token       token.Token
 	Condition   Expr
 	Consequence Expr
 	Alternative Expr
@@ -80,7 +80,6 @@ func (i Integer) TokenLiteral() string {
 func (i Integer) String() string {
 	return i.Token.Literal
 }
-
 
 func (be BinOpExpr) expressionNode() {}
 func (be BinOpExpr) TokenLiteral() string {
