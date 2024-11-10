@@ -28,6 +28,8 @@ const (
 	ELSE  = "ELSE"
 	FALSE = "FALSE"
 	IF    = "IF"
+	IN    = "IN"
+	LET   = "LET"
 	THEN  = "THEN"
 	TRUE  = "TRUE"
 )
@@ -36,6 +38,8 @@ var keywords = map[string]TokenType{
 	"else":  ELSE,
 	"false": FALSE,
 	"if":    IF,
+	"in":    IN,
+	"let":   LET,
 	"then":  THEN,
 	"true":  TRUE,
 }

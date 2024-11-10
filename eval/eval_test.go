@@ -29,6 +29,10 @@ func TestEval(t *testing.T) {
 			input:    "2 + 3",
 			expected: "5",
 		},
+		"binary operator(PLUS) identifier": {
+			input:    "i + x",
+			expected: "11",
+		},
 		"binary operator(ASTERISK)": {
 			input:    "2 * 3",
 			expected: "6",
@@ -56,6 +60,18 @@ func TestEval(t *testing.T) {
 		"nested if identifier": {
 			input:    "if (if x < v then true else false) then 2 else i",
 			expected: "1",
+		},
+		"let declaration": {
+			input:    "let x = 2",
+			expected: "2",
+		},
+		"let in": {
+			input:    "let x = 2 in x + 3",
+			expected: "5",
+		},
+		"nested let in": {
+			input:    "let x = 2 in let y = 3 in x + y",
+			expected: "5",
 		},
 	}
 
