@@ -35,6 +35,7 @@ const (
 	LET   = "LET"
 	THEN  = "THEN"
 	TRUE  = "TRUE"
+	REC   = "REC"
 )
 
 var keywords = map[string]TokenType{
@@ -46,6 +47,7 @@ var keywords = map[string]TokenType{
 	"let":   LET,
 	"then":  THEN,
 	"true":  TRUE,
+	"rec":   REC,
 }
 
 type Token struct {

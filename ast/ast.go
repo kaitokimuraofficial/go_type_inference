@@ -29,6 +29,12 @@ type Declaration struct {
 	Id   Identifier
 }
 
+type RecDeclaration struct {
+	Id       Identifier
+	Param    Identifier
+	BodyExpr Expr
+}
+
 func (s Statement) statementNode() {}
 func (s Statement) TokenLiteral() string {
 	return s.Expr.TokenLiteral()
@@ -49,6 +55,21 @@ func (d Declaration) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(d.Expr.String())
+
+	return out.String()
+}
+
+func (r RecDeclaration) statementNode() {}
+func (r RecDeclaration) TokenLiteral() string {
+	return r.BodyExpr.TokenLiteral()
+}
+func (r RecDeclaration) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("let rec ")
+	out.WriteString(r.Id.Value)
+	out.WriteString(" = ")
+	out.WriteString(r.BodyExpr.String())
 
 	return out.String()
 }
@@ -99,6 +120,14 @@ type AppExpr struct {
 	Token    token.Token
 	Function Expr
 	Argument Expr
+}
+
+type LetRecExpr struct {
+	Token       token.Token
+	Id          Identifier
+	Param       Identifier
+	BindingExpr Expr
+	BodyExpr    Expr
 }
 
 func (b Boolean) expressionNode() {}
@@ -198,6 +227,25 @@ func (ae AppExpr) String() string {
 	out.WriteString(", ")
 	out.WriteString(ae.Argument.String())
 	out.WriteString(" ) ")
+
+	return out.String()
+}
+
+func (lr LetRecExpr) expressionNode() {}
+func (lr LetRecExpr) TokenLiteral() string {
+	return lr.Token.Literal
+}
+func (lr LetRecExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("let rec ")
+	out.WriteString(lr.Id.Value)
+	out.WriteString(" = fun ")
+	out.WriteString(lr.Param.Value)
+	out.WriteString(" -> ")
+	out.WriteString(lr.BindingExpr.String())
+	out.WriteString(" in ")
+	out.WriteString(lr.BodyExpr.String())
 
 	return out.String()
 }

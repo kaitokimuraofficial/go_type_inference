@@ -13,6 +13,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalStatement(node, env)
 	case ast.Declaration:
 		return evalDeclaration(node, env)
+	case ast.RecDeclaration:
+		return evalRecDeclaration(node, env)
 	case ast.Identifier:
 		obj, ok := env.Get(node.Value)
 		if !ok {
@@ -23,6 +25,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return &object.Integer{Value: obj.Value}
 		case *object.Boolean:
 			return &object.Boolean{Value: obj.Value}
+		case *object.Function:
+			return obj
 		}
 	case ast.Integer:
 		return &object.Integer{Value: node.Value}
@@ -38,6 +42,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalLetExpr(node, env)
 	case ast.AppExpr:
 		return evalAppExpr(node, env)
+	case ast.LetRecExpr:
+		return evalLetRecExpr(node, env)
 	}
 
 	return nil
@@ -51,6 +57,13 @@ func evalDeclaration(d ast.Declaration, env *object.Environment) object.Object {
 	v := Eval(d.Expr, env)
 	env.Set(d.Id.Value, v)
 	return v
+}
+
+func evalRecDeclaration(rd ast.RecDeclaration, env *object.Environment) object.Object {
+	f := &object.Function{Param: rd.Param, Body: rd.BodyExpr, Env: *env}
+	env.Set(rd.Id.Value, f)
+
+	return f
 }
 
 func evalBinOpExpr(be ast.BinOpExpr, env *object.Environment) object.Object {
@@ -117,4 +130,11 @@ func evalAppExpr(ae ast.AppExpr, env *object.Environment) object.Object {
 	log.Fatal("Non function value is applied: App")
 
 	return nil
+}
+
+func evalLetRecExpr(lr ast.LetRecExpr, env *object.Environment) object.Object {
+	f := &object.Function{Param: lr.Param, Body: lr.BindingExpr, Env: *env}
+	env.Set(lr.Id.Value, f)
+
+	return Eval(lr.BodyExpr, env)
 }

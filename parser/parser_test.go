@@ -251,6 +251,138 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
+		"let rec declaration": {
+			input: "let rec f = fun n -> if n < 10 then 1 else n * f (n + 1)",
+			expected: ast.RecDeclaration{
+				Id: ast.Identifier{
+					Token: token.Token{Type: token.IDENT, Literal: "f"},
+					Value: "f",
+				},
+				Param: ast.Identifier{
+					Token: token.Token{Type: token.IDENT, Literal: "n"},
+					Value: "n",
+				},
+				BodyExpr: ast.IfExpr{
+					Token: token.Token{Type: token.IF, Literal: "if"},
+					Condition: ast.BinOpExpr{
+						Token: token.Token{Type: token.LT, Literal: "<"},
+						Left: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "n"},
+							Value: "n",
+						},
+						Operator: "<",
+						Right: ast.Integer{
+							Token: token.Token{Type: token.INT, Literal: "10"},
+							Value: 10,
+						},
+					},
+					Consequence: ast.Integer{
+						Token: token.Token{Type: token.INT, Literal: "1"},
+						Value: 1,
+					},
+					Alternative: ast.BinOpExpr{
+						Token: token.Token{Type: token.ASTERISK, Literal: "*"},
+						Left: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "n"},
+							Value: "n",
+						},
+						Operator: "*",
+						Right: ast.AppExpr{
+							Token: token.Token{Type: token.FUN, Literal: "("},
+							Function: ast.Identifier{
+								Token: token.Token{Type: token.IDENT, Literal: "f"},
+								Value: "f",
+							},
+							Argument: ast.BinOpExpr{
+								Token: token.Token{Type: token.PLUS, Literal: "+"},
+								Left: ast.Identifier{
+									Token: token.Token{Type: token.IDENT, Literal: "n"},
+									Value: "n",
+								},
+								Operator: "+",
+								Right: ast.Integer{
+									Token: token.Token{Type: token.INT, Literal: "1"},
+									Value: 1,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"let rec in expression": {
+			input: "let rec fact = fun n -> if n < 1 then 1 else n * (fact (n + 1)) in fact 5",
+			expected: ast.Statement{
+				Expr: ast.LetRecExpr{
+					Token: token.Token{Type: token.REC, Literal: "rec"},
+					Id: ast.Identifier{
+						Token: token.Token{Type: token.IDENT, Literal: "fact"},
+						Value: "fact",
+					},
+					Param: ast.Identifier{
+						Token: token.Token{Type: token.IDENT, Literal: "n"},
+						Value: "n",
+					},
+					BindingExpr: ast.IfExpr{
+						Token: token.Token{Type: token.IF, Literal: "if"},
+						Condition: ast.BinOpExpr{
+							Token: token.Token{Type: token.LT, Literal: "<"},
+							Left: ast.Identifier{
+								Token: token.Token{Type: token.IDENT, Literal: "n"},
+								Value: "n",
+							},
+							Operator: "<",
+							Right: ast.Integer{
+								Token: token.Token{Type: token.INT, Literal: "1"},
+								Value: 1,
+							},
+						},
+						Consequence: ast.Integer{
+							Token: token.Token{Type: token.INT, Literal: "1"},
+							Value: 1,
+						},
+						Alternative: ast.BinOpExpr{
+							Token: token.Token{Type: token.ASTERISK, Literal: "*"},
+							Left: ast.Identifier{
+								Token: token.Token{Type: token.IDENT, Literal: "n"},
+								Value: "n",
+							},
+							Operator: "*",
+							Right: ast.AppExpr{
+								Token: token.Token{Type: token.FUN, Literal: "("},
+								Function: ast.Identifier{
+									Token: token.Token{Type: token.IDENT, Literal: "fact"},
+									Value: "fact",
+								},
+								Argument: ast.BinOpExpr{
+									Token: token.Token{Type: token.PLUS, Literal: "+"},
+									Left: ast.Identifier{
+										Token: token.Token{Type: token.IDENT, Literal: "n"},
+										Value: "n",
+									},
+									Operator: "+",
+									Right: ast.Integer{
+										Token: token.Token{Type: token.INT, Literal: "1"},
+										Value: 1,
+									},
+								},
+							},
+						},
+					},
+					BodyExpr: ast.AppExpr{
+						Token: token.Token{Type: token.FUN, Literal: "("},
+						Function: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "fact"},
+							Value: "fact",
+						},
+						Argument: ast.Integer{
+							Token: token.Token{Type: token.INT, Literal: "5"},
+							Value: 5,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tt := range tests {
