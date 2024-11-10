@@ -18,6 +18,7 @@ import (
 
 %type<statement> statement
 %type<expr> expr
+%type<expr> letrecexpr
 %type<expr> funexpr
 %type<expr> letexpr
 %type<expr> ltexpr
@@ -34,6 +35,7 @@ import (
 %token<token> LT PLUS ASTERISK
 %token<token> LET ASSIGN IN
 %token<token> RARROW FUN
+%token<token> REC
 
 %%
 
@@ -46,6 +48,11 @@ statement
     | LET IDENT ASSIGN expr
     {
         $$ = ast.Declaration{Id: ast.Identifier{Token: $2, Value: $2.Literal}, Expr: $4}
+        yylex.(*LexerWrapper).Result = $$
+    }
+    | LET REC IDENT ASSIGN FUN IDENT RARROW expr
+    {
+        $$ = ast.RecDeclaration{Id: ast.Identifier{Token: $3, Value: $3.Literal}, Param: ast.Identifier{Token: $6, Value: $6.Literal}, BodyExpr: $8}
         yylex.(*LexerWrapper).Result = $$
     }
 
@@ -65,6 +72,16 @@ expr
     | funexpr
     {
         $$ = $1
+    }
+    | letrecexpr
+    {
+        $$ = $1
+    }
+
+letrecexpr
+    : LET REC IDENT ASSIGN FUN IDENT RARROW expr IN expr
+    {
+        $$ = ast.LetRecExpr{Token: $2, Id: ast.Identifier{Token: $3, Value: $3.Literal}, Param: ast.Identifier{Token: $6, Value: $6.Literal}, BindingExpr: $8, BodyExpr: $10}
     }
 
 funexpr
@@ -202,6 +219,8 @@ func (lw *LexerWrapper) Lex(lval *yySymType) int {
         return THEN
     case token.TRUE:
         return TRUE
+    case token.REC:
+        return REC
     default:
         return -1
     }
