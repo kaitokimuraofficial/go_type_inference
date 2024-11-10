@@ -28,12 +28,16 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Integer{Value: node.Value}
 	case ast.Boolean:
 		return &object.Boolean{Value: node.Value}
+	case ast.FunExpr:
+		return &object.Function{Param: node.Param, Body: node.BodyExpr, Env: *env}
 	case ast.BinOpExpr:
 		return evalBinOpExpr(node, env)
 	case ast.IfExpr:
 		return evalIfExpr(node, env)
 	case ast.LetExpr:
 		return evalLetExpr(node, env)
+	case ast.AppExpr:
+		return evalAppExpr(node, env)
 	}
 
 	return nil
@@ -99,4 +103,18 @@ func evalLetExpr(le ast.LetExpr, env *object.Environment) object.Object {
 	v := Eval(le.BindingExpr, env)
 	env.Set(le.Identifier.Value, v)
 	return Eval(le.BodyExpr, env)
+}
+
+func evalAppExpr(ae ast.AppExpr, env *object.Environment) object.Object {
+	f := Eval(ae.Function, env)
+	arg := Eval(ae.Argument, env)
+
+	if f.Type() == object.FUNCTION_OBJ {
+		env.Set(f.(*object.Function).Param.Value, arg)
+		return Eval(f.(*object.Function).Body, env)
+	}
+
+	log.Fatal("Non function value is applied: App")
+
+	return nil
 }

@@ -24,9 +24,12 @@ const (
 	LPAREN = "("
 	RPAREN = ")"
 
+	RARROW = "->"
+
 	// Keyword
 	ELSE  = "ELSE"
 	FALSE = "FALSE"
+	FUN   = "FUN"
 	IF    = "IF"
 	IN    = "IN"
 	LET   = "LET"
@@ -37,6 +40,7 @@ const (
 var keywords = map[string]TokenType{
 	"else":  ELSE,
 	"false": FALSE,
+	"fun":   FUN,
 	"if":    IF,
 	"in":    IN,
 	"let":   LET,

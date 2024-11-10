@@ -73,6 +73,26 @@ func TestEval(t *testing.T) {
 			input:    "let x = 2 in let y = 3 in x + y",
 			expected: "5",
 		},
+		"fun abstraction": {
+			input:    "fun x -> x + 3",
+			expected: "fun(x, (x + 3))",
+		},
+		"fun application-1": {
+			input:    "(fun x -> x + 3 ) 2",
+			expected: "5",
+		},
+		"fun application-2": {
+			input:    "(fun param -> param + 3 ) 2",
+			expected: "5",
+		},
+		"nested function application-1": {
+			input:    "(fun x -> (fun y -> x + y)) 2",
+			expected: "fun(y, (x + y))",
+		},
+		"nested function application-2": {
+			input:    "(fun x -> (fun y -> x + y)) 2 3",
+			expected: "5",
+		},
 	}
 
 	for name, tt := range tests {

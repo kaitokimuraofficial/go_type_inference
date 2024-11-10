@@ -89,6 +89,18 @@ type LetExpr struct {
 	BodyExpr    Expr
 }
 
+type FunExpr struct {
+	Token    token.Token
+	Param    Identifier
+	BodyExpr Expr
+}
+
+type AppExpr struct {
+	Token    token.Token
+	Function Expr
+	Argument Expr
+}
+
 func (b Boolean) expressionNode() {}
 func (b Boolean) TokenLiteral() string {
 	return b.Token.Literal
@@ -153,6 +165,39 @@ func (le LetExpr) String() string {
 	out.WriteString(" in ")
 	out.WriteString(le.BodyExpr.String())
 	out.WriteString(" ")
+
+	return out.String()
+}
+
+func (fe FunExpr) expressionNode() {}
+func (fe FunExpr) TokenLiteral() string {
+	// return fe.Token.Literal
+	return fe.BodyExpr.TokenLiteral()
+}
+func (fe FunExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("fun ")
+	out.WriteString(fe.Param.Value)
+	out.WriteString(" -> ")
+	out.WriteString(fe.BodyExpr.String())
+	out.WriteString(" ")
+
+	return out.String()
+}
+
+func (ae AppExpr) expressionNode() {}
+func (ae AppExpr) TokenLiteral() string {
+	return ae.Token.Literal
+}
+func (ae AppExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("( ")
+	out.WriteString(ae.Function.String())
+	out.WriteString(", ")
+	out.WriteString(ae.Argument.String())
+	out.WriteString(" ) ")
 
 	return out.String()
 }

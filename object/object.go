@@ -1,12 +1,17 @@
 package object
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"go_type_inference/ast"
+)
 
 type ObjectType string
 
 const (
-	INTEGER_OBJ = "INTEGER"
-	BOOLEAN_OBJ = "BOOLEAN"
+	INTEGER_OBJ  = "INTEGER"
+	BOOLEAN_OBJ  = "BOOLEAN"
+	FUNCTION_OBJ = "FUNCTION"
 )
 
 type Object interface {
@@ -36,4 +41,27 @@ func (b *Boolean) Type() ObjectType {
 
 func (b *Boolean) Inspect() string {
 	return fmt.Sprintf("%t", b.Value)
+}
+
+type Function struct {
+	Param ast.Identifier
+	Body  ast.Expr
+	Env   Environment
+}
+
+func (f *Function) Type() ObjectType {
+	return FUNCTION_OBJ
+}
+
+func (f *Function) Inspect() string {
+	var out bytes.Buffer
+
+	out.WriteString("fun")
+	out.WriteString("(")
+	out.WriteString(f.Param.String())
+	out.WriteString(", ")
+	out.WriteString(f.Body.String())
+	out.WriteString(")")
+
+	return out.String()
 }
