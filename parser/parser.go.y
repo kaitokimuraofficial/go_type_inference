@@ -18,10 +18,12 @@ import (
 
 %type<statement> statement
 %type<expr> expr
+%type<expr> funexpr
 %type<expr> letexpr
 %type<expr> ltexpr
 %type<expr> pexpr
 %type<expr> mexpr
+%type<expr> appexpr
 %type<expr> aexpr
 %type<expr> ifexpr
 
@@ -31,6 +33,7 @@ import (
 %token<token> IF THEN ELSE
 %token<token> LT PLUS ASTERISK
 %token<token> LET ASSIGN IN
+%token<token> RARROW FUN
 
 %%
 
@@ -58,6 +61,16 @@ expr
     | ltexpr
     {
         $$ = $1
+    }
+    | funexpr
+    {
+        $$ = $1
+    }
+
+funexpr
+    : FUN IDENT RARROW expr
+    {
+        $$ = ast.FunExpr{Token: $1, Param: ast.Identifier{Token: $2, Value: $2.Literal}, BodyExpr: $4}
     }
 
 letexpr
@@ -87,9 +100,19 @@ pexpr
     }
 
 mexpr
-    : mexpr ASTERISK aexpr
+    : mexpr ASTERISK appexpr
     {
         $$ = ast.BinOpExpr{Token: $2, Left: $1, Operator: token.ASTERISK, Right: $3}
+    }
+    | appexpr
+    {
+        $$ = $1
+    }
+
+appexpr
+    : appexpr aexpr
+    {
+        $$ = ast.AppExpr{Token: token.Token{Type: token.FUN, Literal: "("}, Function: $1, Argument: $2}
     }
     | aexpr
     {
@@ -161,10 +184,14 @@ func (lw *LexerWrapper) Lex(lval *yySymType) int {
         return LPAREN
     case token.RPAREN:
         return RPAREN
+    case token.RARROW:
+        return RARROW
     case token.ELSE:
         return ELSE
     case token.FALSE:
         return FALSE
+    case token.FUN:
+        return FUN
     case token.IF:
         return IF
     case token.IN:

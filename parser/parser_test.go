@@ -127,6 +127,130 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
+		"fun abstraction": {
+			input: "fun x -> x + 3",
+			expected: ast.Statement{
+				Expr: ast.FunExpr{
+					Token: token.Token{Type: token.FUN, Literal: "fun"},
+					Param: ast.Identifier{
+						Token: token.Token{Type: token.IDENT, Literal: "x"},
+						Value: "x",
+					},
+					BodyExpr: ast.BinOpExpr{
+						Token: token.Token{Type: token.PLUS, Literal: "+"},
+						Left: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "x"},
+							Value: "x",
+						},
+						Operator: "+",
+						Right: ast.Integer{
+							Token: token.Token{Type: token.INT, Literal: "3"},
+							Value: 3,
+						},
+					},
+				},
+			},
+		},
+		"function application": {
+			input: "(fun x -> x + 3 ) 2",
+			expected: ast.Statement{
+				Expr: ast.AppExpr{
+					Token: token.Token{Type: token.FUN, Literal: "("},
+					Function: ast.FunExpr{
+						Token: token.Token{Type: token.FUN, Literal: "fun"},
+						Param: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "x"},
+							Value: "x",
+						},
+						BodyExpr: ast.BinOpExpr{
+							Token: token.Token{Type: token.PLUS, Literal: "+"},
+							Left: ast.Identifier{
+								Token: token.Token{Type: token.IDENT, Literal: "x"},
+								Value: "x",
+							},
+							Operator: "+",
+							Right: ast.Integer{
+								Token: token.Token{Type: token.INT, Literal: "3"},
+								Value: 3,
+							},
+						},
+					},
+					Argument: ast.Integer{
+						Token: token.Token{Type: token.INT, Literal: "2"},
+						Value: 2,
+					},
+				},
+			},
+		},
+		"nested function abstraction": {
+			input: "fun x -> (fun y -> x + y)",
+			expected: ast.Statement{
+				Expr: ast.FunExpr{
+					Token: token.Token{Type: token.FUN, Literal: "fun"},
+					Param: ast.Identifier{
+						Token: token.Token{Type: token.IDENT, Literal: "x"},
+						Value: "x",
+					},
+					BodyExpr: ast.FunExpr{
+						Token: token.Token{Type: token.FUN, Literal: "fun"},
+						Param: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "y"},
+							Value: "y",
+						},
+						BodyExpr: ast.BinOpExpr{
+							Token: token.Token{Type: token.PLUS, Literal: "+"},
+							Left: ast.Identifier{
+								Token: token.Token{Type: token.IDENT, Literal: "x"},
+								Value: "x",
+							},
+							Operator: "+",
+							Right: ast.Identifier{
+								Token: token.Token{Type: token.IDENT, Literal: "y"},
+								Value: "y",
+							},
+						},
+					},
+				},
+			},
+		},
+		"nested function application": {
+			input: "(fun x -> (fun y -> x + y)) 2",
+			expected: ast.Statement{
+				Expr: ast.AppExpr{
+					Token: token.Token{Type: token.FUN, Literal: "("},
+					Function: ast.FunExpr{
+						Token: token.Token{Type: token.FUN, Literal: "fun"},
+						Param: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "x"},
+							Value: "x",
+						},
+						BodyExpr: ast.FunExpr{
+							Token: token.Token{Type: token.FUN, Literal: "fun"},
+							Param: ast.Identifier{
+								Token: token.Token{Type: token.IDENT, Literal: "y"},
+								Value: "y",
+							},
+							BodyExpr: ast.BinOpExpr{
+								Token: token.Token{Type: token.PLUS, Literal: "+"},
+								Left: ast.Identifier{
+									Token: token.Token{Type: token.IDENT, Literal: "x"},
+									Value: "x",
+								},
+								Operator: "+",
+								Right: ast.Identifier{
+									Token: token.Token{Type: token.IDENT, Literal: "y"},
+									Value: "y",
+								},
+							},
+						},
+					},
+					Argument: ast.Integer{
+						Token: token.Token{Type: token.INT, Literal: "2"},
+						Value: 2,
+					},
+				},
+			},
+		},
 	}
 
 	for name, tt := range tests {
