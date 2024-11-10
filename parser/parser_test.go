@@ -86,6 +86,47 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
+		"let declaration": {
+			input: "let x = 5",
+			expected: ast.Declaration{
+				Expr: ast.Integer{
+					Token: token.Token{Type: token.INT, Literal: "5"},
+					Value: 5,
+				},
+				Id: ast.Identifier{
+					Token: token.Token{Type: token.IDENT, Literal: "x"},
+					Value: "x",
+				},
+			},
+		},
+		"let in": {
+			input: "let x = 2 in x + 3",
+			expected: ast.Statement{
+				Expr: ast.LetExpr{
+					Token: token.Token{Type: token.LET, Literal: "let"},
+					Identifier: ast.Identifier{
+						Token: token.Token{Type: token.IDENT, Literal: "x"},
+						Value: "x",
+					},
+					BindingExpr: ast.Integer{
+						Token: token.Token{Type: token.INT, Literal: "2"},
+						Value: 2,
+					},
+					BodyExpr: ast.BinOpExpr{
+						Token: token.Token{Type: token.PLUS, Literal: "+"},
+						Left: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "x"},
+							Value: "x",
+						},
+						Operator: "+",
+						Right: ast.Integer{
+							Token: token.Token{Type: token.INT, Literal: "3"},
+							Value: 3,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tt := range tests {

@@ -18,6 +18,7 @@ import (
 
 %type<statement> statement
 %type<expr> expr
+%type<expr> letexpr
 %type<expr> ltexpr
 %type<expr> pexpr
 %type<expr> mexpr
@@ -29,6 +30,7 @@ import (
 %token<token> LPAREN RPAREN
 %token<token> IF THEN ELSE
 %token<token> LT PLUS ASTERISK
+%token<token> LET ASSIGN IN
 
 %%
 
@@ -38,15 +40,30 @@ statement
         $$ = ast.Statement{Expr: $1}
         yylex.(*LexerWrapper).Result = $$
     }
+    | LET IDENT ASSIGN expr
+    {
+        $$ = ast.Declaration{Id: ast.Identifier{Token: $2, Value: $2.Literal}, Expr: $4}
+        yylex.(*LexerWrapper).Result = $$
+    }
 
 expr
     : ifexpr
     {
         $$ = $1
     }
+    | letexpr
+    {
+        $$ = $1
+    }
     | ltexpr
     {
         $$ = $1
+    }
+
+letexpr
+    : LET IDENT ASSIGN expr IN expr
+    {
+        $$ = ast.LetExpr{Token: $1, Identifier: ast.Identifier{Token: $2, Value: $2.Literal}, BindingExpr: $4, BodyExpr: $6}
     }
 
 ltexpr
@@ -132,6 +149,8 @@ func (lw *LexerWrapper) Lex(lval *yySymType) int {
         return IDENT
     case token.INT:
         return INT
+    case token.ASSIGN:
+        return ASSIGN
     case token.ASTERISK:
         return ASTERISK
     case token.PLUS:
@@ -148,6 +167,10 @@ func (lw *LexerWrapper) Lex(lval *yySymType) int {
         return FALSE
     case token.IF:
         return IF
+    case token.IN:
+        return IN
+    case token.LET:
+        return LET
     case token.THEN:
         return THEN
     case token.TRUE:

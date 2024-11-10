@@ -24,6 +24,11 @@ type Statement struct {
 	Expr Expr
 }
 
+type Declaration struct {
+	Expr Expr
+	Id   Identifier
+}
+
 func (s Statement) statementNode() {}
 func (s Statement) TokenLiteral() string {
 	return s.Expr.TokenLiteral()
@@ -32,6 +37,18 @@ func (s Statement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(s.Expr.String())
+
+	return out.String()
+}
+
+func (d Declaration) statementNode() {}
+func (d Declaration) TokenLiteral() string {
+	return d.Expr.TokenLiteral()
+}
+func (d Declaration) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(d.Expr.String())
 
 	return out.String()
 }
@@ -63,6 +80,13 @@ type IfExpr struct {
 	Condition   Expr
 	Consequence Expr
 	Alternative Expr
+}
+
+type LetExpr struct {
+	Token       token.Token
+	Identifier  Identifier
+	BindingExpr Expr
+	BodyExpr    Expr
 }
 
 func (b Boolean) expressionNode() {}
@@ -111,6 +135,24 @@ func (ie IfExpr) String() string {
 	out.WriteString(" ) else ( ")
 	out.WriteString(ie.Alternative.String())
 	out.WriteString(" ) ")
+
+	return out.String()
+}
+
+func (le LetExpr) expressionNode() {}
+func (le LetExpr) TokenLiteral() string {
+	return le.Token.Literal
+}
+func (le LetExpr) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("let ")
+	out.WriteString(le.Identifier.Value)
+	out.WriteString(" = ")
+	out.WriteString(le.BindingExpr.String())
+	out.WriteString(" in ")
+	out.WriteString(le.BodyExpr.String())
+	out.WriteString(" ")
 
 	return out.String()
 }

@@ -11,6 +11,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	case ast.Statement:
 		return evalStatement(node, env)
+	case ast.Declaration:
+		return evalDeclaration(node, env)
 	case ast.Identifier:
 		obj, ok := env.Get(node.Value)
 		if !ok {
@@ -30,6 +32,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalBinOpExpr(node, env)
 	case ast.IfExpr:
 		return evalIfExpr(node, env)
+	case ast.LetExpr:
+		return evalLetExpr(node, env)
 	}
 
 	return nil
@@ -37,6 +41,12 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 func evalStatement(s ast.Statement, env *object.Environment) object.Object {
 	return Eval(s.Expr, env)
+}
+
+func evalDeclaration(d ast.Declaration, env *object.Environment) object.Object {
+	v := Eval(d.Expr, env)
+	env.Set(d.Id.Value, v)
+	return v
 }
 
 func evalBinOpExpr(be ast.BinOpExpr, env *object.Environment) object.Object {
@@ -83,4 +93,10 @@ func evalIfExpr(ie ast.IfExpr, env *object.Environment) object.Object {
 	log.Fatal("Condition must be boolean: If")
 
 	return nil
+}
+
+func evalLetExpr(le ast.LetExpr, env *object.Environment) object.Object {
+	v := Eval(le.BindingExpr, env)
+	env.Set(le.Identifier.Value, v)
+	return Eval(le.BodyExpr, env)
 }
