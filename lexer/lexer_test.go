@@ -7,7 +7,7 @@ import (
 
 func TestNextToken(t *testing.T) {
 	input := `=*+()
-=*4 ;true in let inlet
+=*4 ;true in let inlet fun ->
 ;;
 `
 
@@ -28,6 +28,8 @@ func TestNextToken(t *testing.T) {
 		{token.IN, "in"},
 		{token.LET, "let"},
 		{token.IDENT, "inlet"},
+		{token.FUN, "fun"},
+		{token.RARROW, "->"},
 		{token.SEMISEMI, ";;"},
 		{token.EOF, ""},
 	}
