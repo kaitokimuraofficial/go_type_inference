@@ -2,19 +2,19 @@ package object
 
 func NewEnvironment() *Environment {
 	s := make(map[string]Object)
-	return &Environment{store: s}
+	return &Environment{Store: s}
 }
 
 type Environment struct {
-	store map[string]Object
+	Store map[string]Object
 }
 
 func (e *Environment) Get(name string) (Object, bool) {
-	obj, ok := e.store[name]
+	obj, ok := e.Store[name]
 	return obj, ok
 }
 
 func (e *Environment) Set(name string, val Object) Object {
-	e.store[name] = val
+	e.Store[name] = val
 	return val
 }

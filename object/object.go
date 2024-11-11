@@ -23,11 +23,11 @@ type Integer struct {
 	Value int
 }
 
-func (i *Integer) Type() ObjectType {
+func (i Integer) Type() ObjectType {
 	return INTEGER_OBJ
 }
 
-func (i *Integer) Inspect() string {
+func (i Integer) Inspect() string {
 	return fmt.Sprintf("%d", i.Value)
 }
 
@@ -35,11 +35,11 @@ type Boolean struct {
 	Value bool
 }
 
-func (b *Boolean) Type() ObjectType {
+func (b Boolean) Type() ObjectType {
 	return BOOLEAN_OBJ
 }
 
-func (b *Boolean) Inspect() string {
+func (b Boolean) Inspect() string {
 	return fmt.Sprintf("%t", b.Value)
 }
 
@@ -49,11 +49,11 @@ type Function struct {
 	Env   Environment
 }
 
-func (f *Function) Type() ObjectType {
+func (f Function) Type() ObjectType {
 	return FUNCTION_OBJ
 }
 
-func (f *Function) Inspect() string {
+func (f Function) Inspect() string {
 	var out bytes.Buffer
 
 	out.WriteString("fun")
