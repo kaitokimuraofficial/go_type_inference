@@ -13,6 +13,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalStatement(node, env)
 	case ast.Declaration:
 		return evalDeclaration(node, env)
+	case ast.RecDeclaration:
+		return evalRecDeclaration(node, env)
 	case ast.Identifier:
 		obj, ok := env.Get(node.Value)
 		if !ok {
@@ -59,6 +61,14 @@ func evalDeclaration(d ast.Declaration, env *object.Environment) object.Object {
 	v := Eval(d.Expr, env)
 	env.Set(d.Id.Value, v)
 	return v
+}
+
+func evalRecDeclaration(rd ast.RecDeclaration, env *object.Environment) object.Object {
+	dummyEnv := object.NewEnvironment()
+	f := object.Function{Param: rd.Param, Body: rd.BodyExpr, Env: *dummyEnv}
+
+	env.Set(rd.Id.Value, f)
+	return f
 }
 
 func evalBinOpExpr(be ast.BinOpExpr, env *object.Environment) object.Object {

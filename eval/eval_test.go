@@ -180,6 +180,64 @@ func TestEval(t *testing.T) {
 				Value: 5,
 			},
 		},
+		"let rec declaration": {
+			input: "let rec f = fun n -> (if 10 < n then 1 else n * f (n + 1))",
+			expected: object.Function{
+				Param: ast.Identifier{
+					Token: token.Token{Type: token.IDENT, Literal: "n"},
+					Value: "n",
+				},
+				Body: ast.IfExpr{
+					Token: token.Token{Type: token.IF, Literal: "if"},
+					Condition: ast.BinOpExpr{
+						Token: token.Token{Type: token.LT, Literal: "<"},
+						Left: ast.Integer{
+							Token: token.Token{Type: token.INT, Literal: "10"},
+							Value: 10,
+						},
+						Operator: "<",
+						Right: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "n"},
+							Value: "n",
+						},
+					},
+					Consequence: ast.Integer{
+						Token: token.Token{Type: token.INT, Literal: "1"},
+						Value: 1,
+					},
+					Alternative: ast.BinOpExpr{
+						Token: token.Token{Type: token.ASTERISK, Literal: "*"},
+						Left: ast.Identifier{
+							Token: token.Token{Type: token.IDENT, Literal: "n"},
+							Value: "n",
+						},
+						Operator: "*",
+						Right: ast.AppExpr{
+							Token: token.Token{Type: token.FUN, Literal: "("},
+							Function: ast.Identifier{
+								Token: token.Token{Type: token.IDENT, Literal: "f"},
+								Value: "f",
+							},
+							Argument: ast.BinOpExpr{
+								Token: token.Token{Type: token.PLUS, Literal: "+"},
+								Left: ast.Identifier{
+									Token: token.Token{Type: token.IDENT, Literal: "n"},
+									Value: "n",
+								},
+								Operator: "+",
+								Right: ast.Integer{
+									Token: token.Token{Type: token.INT, Literal: "1"},
+									Value: 1,
+								},
+							},
+						},
+					},
+				},
+				Env: object.Environment{
+					Store: map[string]object.Object{},
+				},
+			},
+		},
 		"let rec expression": {
 			input: "let rec fact = fun n -> (if 9 < n then 1 else n * (fact (n+1))) in fact 8",
 			expected: object.Integer{
