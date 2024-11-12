@@ -1,7 +1,6 @@
 package object
 
 import (
-	"bytes"
 	"fmt"
 	"go_type_inference/ast"
 )
@@ -54,14 +53,9 @@ func (f Function) Type() ValueType {
 }
 
 func (f Function) Inspect() string {
-	var out bytes.Buffer
-
-	out.WriteString("fun")
-	out.WriteString("(")
-	out.WriteString(f.Param.String())
-	out.WriteString(", ")
-	out.WriteString(f.Body.String())
-	out.WriteString(")")
-
-	return out.String()
+	return fmt.Sprintf(
+		"fun %s -> %s",
+		f.Param.String(),
+		f.Body.String(),
+	)
 }

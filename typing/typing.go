@@ -14,11 +14,7 @@ func Infer(node ast.Node, env *object.TypeEnvironment) object.InferredObject {
 	case ast.Declaration:
 		return inferDeclaration(node, env)
 	case ast.Identifier:
-		obj, ok := env.Get(node)
-		if !ok {
-			log.Fatal("Variable not bound")
-		}
-		return obj
+		return inferIdentifier(node, env)
 	case ast.Integer:
 		return object.TyInt{}
 	case ast.Boolean:
@@ -30,7 +26,7 @@ func Infer(node ast.Node, env *object.TypeEnvironment) object.InferredObject {
 	case ast.LetExpr:
 		return inferLetExpr(node, env)
 	default:
-		log.Fatal("Not Implemented!")
+		log.Fatalf("Type inference not implemented for node type: %s", node.String())
 	}
 
 	return nil
@@ -41,35 +37,36 @@ func inferStatement(s ast.Statement, env *object.TypeEnvironment) object.Inferre
 }
 
 func inferDeclaration(d ast.Declaration, env *object.TypeEnvironment) object.InferredObject {
-	v := Infer(d.Expr, env)
-	env.Set(d.Id, v)
-
-	return v
+	t := Infer(d.Expr, env)
+	env.Set(d.Id, t)
+	return t
 }
 
+func inferIdentifier(i ast.Identifier, env *object.TypeEnvironment) object.InferredObject {
+	t, ok := env.Get(i)
+	if !ok {
+		log.Fatal("Variable not bound")
+	}
+	return t
+}
+
+// While the binary operator operands are not strictly required to be integers,
+// this program expects both operands to be integers.
 func inferBinOpExpr(be ast.BinOpExpr, env *object.TypeEnvironment) object.InferredObject {
 	lt := Infer(be.Left, env)
 	rt := Infer(be.Right, env)
 
+	if lt.Type() != object.INTEGER_TYPE || rt.Type() != object.INTEGER_TYPE {
+		log.Fatalf("Both arguments must be Integer for operator %s", be.Token.Type)
+	}
+
 	switch be.Token.Type {
 	case token.PLUS:
-		if lt.Type() == object.INTEGER_TYPE && rt.Type() == object.INTEGER_TYPE {
-			return object.TyInt{}
-		} else {
-			log.Fatal("Both arguments must be integer: +")
-		}
+		return object.TyInt{}
 	case token.ASTERISK:
-		if lt.Type() == object.INTEGER_TYPE && rt.Type() == object.INTEGER_TYPE {
-			return object.TyInt{}
-		} else {
-			log.Fatal("Both arguments must be integer: *")
-		}
+		return object.TyInt{}
 	case token.LT:
-		if lt.Type() == object.INTEGER_TYPE && rt.Type() == object.INTEGER_TYPE {
-			return object.TyBool{}
-		} else {
-			log.Fatal("Both arguments must be integer: <")
-		}
+		return object.TyBool{}
 	default:
 		log.Fatal("The combination of binary operator and argument is incorrect: BinOp")
 	}
@@ -84,19 +81,18 @@ func inferIfExpr(ie ast.IfExpr, env *object.TypeEnvironment) object.InferredObje
 
 	if cndType.Type() != object.BOOLEAN_TYPE {
 		log.Fatal("Not Implemented!")
-		return consType
 	}
 
 	if consType.Type() == altType.Type() {
 		return consType
 	}
 
+	log.Fatalf("consequence and alternative types do not match: If")
 	return nil
 }
 
 func inferLetExpr(le ast.LetExpr, env *object.TypeEnvironment) object.InferredObject {
-	bindType := Infer(le.BindingExpr, env)
-	env.Set(le.Id, bindType)
-
+	t := Infer(le.BindingExpr, env)
+	env.Set(le.Id, t)
 	return Infer(le.BodyExpr, env)
 }
