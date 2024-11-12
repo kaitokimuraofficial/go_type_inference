@@ -26,8 +26,8 @@ func (t TyBool) Type() InferredType {
 }
 
 type TyFun struct {
-	Abs InferredType
-	App InferredType
+	Abs InferredObject
+	App InferredObject
 }
 
 func (t TyFun) Type() InferredType {
@@ -35,7 +35,7 @@ func (t TyFun) Type() InferredType {
 }
 
 type TyIdent struct {
-	Value int
+	Value InferredType
 }
 
 func (t TyIdent) Type() InferredType {
