@@ -1,36 +1,36 @@
 package object
 
-type InferType int
+type InferredType int
 
 const (
-	INTEGER_TYPE InferType = iota
+	INTEGER_TYPE InferredType = iota
 	BOOLEAN_TYPE
 	FUNCTION_TYPE
-	IDENTIFER_TYPE
+	IDENTIFIER_TYPE
 )
 
-type InferObject interface {
-	Type() InferType
+type InferredObject interface {
+	Type() InferredType
 }
 
 type TyInt struct{}
 
-func (t TyInt) Type() InferType {
+func (t TyInt) Type() InferredType {
 	return INTEGER_TYPE
 }
 
 type TyBool struct{}
 
-func (t TyBool) Type() InferType {
+func (t TyBool) Type() InferredType {
 	return BOOLEAN_TYPE
 }
 
 type TyFun struct {
-	Abs InferType
-	App InferType
+	Abs InferredType
+	App InferredType
 }
 
-func (t TyFun) Type() InferType {
+func (t TyFun) Type() InferredType {
 	return FUNCTION_TYPE
 }
 
@@ -38,6 +38,6 @@ type TyIdent struct {
 	Value int
 }
 
-func (t TyIdent) Type() InferType {
-	return IDENTIFER_TYPE
+func (t TyIdent) Type() InferredType {
+	return IDENTIFIER_TYPE
 }
