@@ -14,7 +14,7 @@ func TestEval(t *testing.T) {
 
 	tests := map[string]struct {
 		input    string
-		expected object.Object
+		expected object.Value
 	}{
 		"identifier": {
 			input: "x",
@@ -126,10 +126,19 @@ func TestEval(t *testing.T) {
 					},
 				},
 				Env: object.Environment{
-					Store: map[string]object.Object{
-						"i": object.Integer{Value: 1},
-						"v": object.Integer{Value: 5},
-						"x": object.Integer{Value: 10},
+					Store: map[ast.Identifier]object.Value{
+						{
+							Token: token.Token{Type: token.IDENT, Literal: "i"},
+							Value: "i",
+						}: object.Integer{Value: 1},
+						{
+							Token: token.Token{Type: token.IDENT, Literal: "v"},
+							Value: "v",
+						}: object.Integer{Value: 5},
+						{
+							Token: token.Token{Type: token.IDENT, Literal: "x"},
+							Value: "x",
+						}: object.Integer{Value: 10},
 					},
 				},
 			},
@@ -166,10 +175,19 @@ func TestEval(t *testing.T) {
 					},
 				},
 				Env: object.Environment{
-					Store: map[string]object.Object{
-						"i": object.Integer{Value: 1},
-						"v": object.Integer{Value: 5},
-						"x": object.Integer{Value: 2},
+					Store: map[ast.Identifier]object.Value{
+						{
+							Token: token.Token{Type: token.IDENT, Literal: "i"},
+							Value: "i",
+						}: object.Integer{Value: 1},
+						{
+							Token: token.Token{Type: token.IDENT, Literal: "v"},
+							Value: "v",
+						}: object.Integer{Value: 5},
+						{
+							Token: token.Token{Type: token.IDENT, Literal: "x"},
+							Value: "x",
+						}: object.Integer{Value: 2},
 					},
 				},
 			},
@@ -234,7 +252,7 @@ func TestEval(t *testing.T) {
 					},
 				},
 				Env: object.Environment{
-					Store: map[string]object.Object{},
+					Store: map[ast.Identifier]object.Value{},
 				},
 			},
 		},
@@ -250,9 +268,9 @@ func TestEval(t *testing.T) {
 		tt := tt
 
 		env := object.NewEnvironment()
-		env.Set("i", object.Integer{Value: 1})
-		env.Set("v", object.Integer{Value: 5})
-		env.Set("x", object.Integer{Value: 10})
+		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "i"}, Value: "i"}, object.Integer{Value: 1})
+		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "v"}, Value: "v"}, object.Integer{Value: 5})
+		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "x"}, Value: "x"}, object.Integer{Value: 10})
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
