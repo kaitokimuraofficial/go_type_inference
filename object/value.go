@@ -6,16 +6,16 @@ import (
 	"go_type_inference/ast"
 )
 
-type ObjectType string
+type ValueType int
 
 const (
-	INTEGER_OBJ  = "INTEGER"
-	BOOLEAN_OBJ  = "BOOLEAN"
-	FUNCTION_OBJ = "FUNCTION"
+	INTEGER_VAL ValueType = iota
+	BOOLEAN_VAL
+	FUNCTION_VAL
 )
 
-type Object interface {
-	Type() ObjectType
+type Value interface {
+	Type() ValueType
 	Inspect() string
 }
 
@@ -23,8 +23,8 @@ type Integer struct {
 	Value int
 }
 
-func (i Integer) Type() ObjectType {
-	return INTEGER_OBJ
+func (i Integer) Type() ValueType {
+	return INTEGER_VAL
 }
 
 func (i Integer) Inspect() string {
@@ -35,8 +35,8 @@ type Boolean struct {
 	Value bool
 }
 
-func (b Boolean) Type() ObjectType {
-	return BOOLEAN_OBJ
+func (b Boolean) Type() ValueType {
+	return BOOLEAN_VAL
 }
 
 func (b Boolean) Inspect() string {
@@ -49,8 +49,8 @@ type Function struct {
 	Env   Environment
 }
 
-func (f Function) Type() ObjectType {
-	return FUNCTION_OBJ
+func (f Function) Type() ValueType {
+	return FUNCTION_VAL
 }
 
 func (f Function) Inspect() string {
