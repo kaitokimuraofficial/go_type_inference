@@ -1,8 +1,10 @@
 package typing
 
 import (
+	"go_type_inference/ast"
 	"go_type_inference/object"
 	"go_type_inference/parser"
+	"go_type_inference/token"
 	"reflect"
 	"testing"
 )
@@ -12,7 +14,7 @@ func TestInfer(t *testing.T) {
 
 	tests := map[string]struct {
 		input    string
-		expected object.InferObject
+		expected object.InferredObject
 	}{
 		"identifier": {
 			input:    "i",
@@ -80,9 +82,9 @@ func TestInfer(t *testing.T) {
 		tt := tt
 
 		env := object.NewTypeEnvironment()
-		env.Set("b", object.TyBool{})
-		env.Set("i", object.TyInt{})
-		env.Set("v", object.TyInt{})
+		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "b"}, Value: "b"}, object.TyBool{})
+		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "i"}, Value: "i"}, object.TyInt{})
+		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "v"}, Value: "v"}, object.TyInt{})
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()

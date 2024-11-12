@@ -8,7 +8,7 @@ func NewEnvironment() *Environment {
 }
 
 func NewTypeEnvironment() *TypeEnvironment {
-	s := make(map[string]InferredObject)
+	s := make(map[ast.Identifier]InferredObject)
 	return &TypeEnvironment{Store: s}
 }
 
@@ -17,7 +17,7 @@ type Environment struct {
 }
 
 type TypeEnvironment struct {
-	Store map[string]InferredObject
+	Store map[ast.Identifier]InferredObject
 }
 
 func (e *Environment) Get(k ast.Identifier) (Value, bool) {
@@ -30,12 +30,12 @@ func (e *Environment) Set(k ast.Identifier, v Value) Value {
 	return v
 }
 
-func (e *TypeEnvironment) Get(k string) (InferredObject, bool) {
+func (e *TypeEnvironment) Get(k ast.Identifier) (InferredObject, bool) {
 	obj, ok := e.Store[k]
 	return obj, ok
 }
 
-func (e *TypeEnvironment) Set(k string, v InferredObject) InferredObject {
+func (e *TypeEnvironment) Set(k ast.Identifier, v InferredObject) InferredObject {
 	e.Store[k] = v
 	return v
 }
