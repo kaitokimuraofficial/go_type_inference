@@ -105,7 +105,7 @@ type IfExpr struct {
 
 type LetExpr struct {
 	Token       token.Token
-	Identifier  Identifier
+	Id          Identifier
 	BindingExpr Expr
 	BodyExpr    Expr
 }
@@ -188,7 +188,7 @@ func (le LetExpr) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("let ")
-	out.WriteString(le.Identifier.Value)
+	out.WriteString(le.Id.Value)
 	out.WriteString(" = ")
 	out.WriteString(le.BindingExpr.String())
 	out.WriteString(" in ")

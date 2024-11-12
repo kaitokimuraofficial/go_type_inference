@@ -104,7 +104,7 @@ func TestParse(t *testing.T) {
 			expected: ast.Statement{
 				Expr: ast.LetExpr{
 					Token: token.Token{Type: token.LET, Literal: "let"},
-					Identifier: ast.Identifier{
+					Id: ast.Identifier{
 						Token: token.Token{Type: token.IDENT, Literal: "x"},
 						Value: "x",
 					},
