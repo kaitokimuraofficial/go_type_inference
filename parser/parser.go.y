@@ -93,7 +93,7 @@ funexpr
 letexpr
     : LET IDENT ASSIGN expr IN expr
     {
-        $$ = ast.LetExpr{Token: $1, Identifier: ast.Identifier{Token: $2, Value: $2.Literal}, BindingExpr: $4, BodyExpr: $6}
+        $$ = ast.LetExpr{Token: $1, Id: ast.Identifier{Token: $2, Value: $2.Literal}, BindingExpr: $4, BodyExpr: $6}
     }
 
 ltexpr

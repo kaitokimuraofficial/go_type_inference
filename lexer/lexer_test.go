@@ -37,17 +37,15 @@ func TestNextToken(t *testing.T) {
 
 	l := New(input)
 
-	for i, tt := range tests {
-		tok := l.NextToken()
+	for _, tt := range tests {
+		got := l.NextToken()
 
-		if tok.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
-				i, tt.expectedType, tok.Type)
+		if got.Type != tt.expectedType {
+			t.Errorf("[TOKEN TYPE ERROR] expect: %q, but got: %q", tt.expectedType, got.Type)
 		}
 
-		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
-				i, tt.expectedLiteral, tok.Literal)
+		if got.Literal != tt.expectedLiteral {
+			t.Errorf("[TOKEN LITERAL ERROR] expect: %q, but got: %q", tt.expectedLiteral, got.Literal)
 		}
 	}
 

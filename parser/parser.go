@@ -626,7 +626,7 @@ yydefault:
 		yyDollar = yyS[yypt-6 : yypt+1]
 //line parser/parser.go.y:95
 		{
-			yyVAL.expr = ast.LetExpr{Token: yyDollar[1].token, Identifier: ast.Identifier{Token: yyDollar[2].token, Value: yyDollar[2].token.Literal}, BindingExpr: yyDollar[4].expr, BodyExpr: yyDollar[6].expr}
+			yyVAL.expr = ast.LetExpr{Token: yyDollar[1].token, Id: ast.Identifier{Token: yyDollar[2].token, Value: yyDollar[2].token.Literal}, BindingExpr: yyDollar[4].expr, BodyExpr: yyDollar[6].expr}
 		}
 	case 12:
 		yyDollar = yyS[yypt-3 : yypt+1]
