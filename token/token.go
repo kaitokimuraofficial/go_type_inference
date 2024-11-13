@@ -1,44 +1,78 @@
 package token
 
-type TokenType string
+import "strconv"
+
+type Type int
 
 const (
-	ILLEGAL = "ILLEGAL"
-	EOF     = "EOF"
+	ILLEGAL Type = iota
+	EOF
 
 	// Identifier
-	IDENT = "IDENT"
-	INT   = "INT"
+	IDENT // x
+	INT   // 123
 
 	// Operator
-	ASSIGN   = "="
-	ASTERISK = "*"
-	PLUS     = "+"
+	ASSIGN   // =
+	ASTERISK // *
+	PLUS     // +
 
-	LT = "<"
+	LT // <
 
 	// Delimiter
-	SEMI     = ";"
-	SEMISEMI = ";;"
+	SEMI     // ;
+	SEMISEMI // ;;
 
-	LPAREN = "("
-	RPAREN = ")"
+	LPAREN // (
+	RPAREN // )
 
-	RARROW = "->"
+	RARROW // ->
 
 	// Keyword
-	ELSE  = "ELSE"
-	FALSE = "FALSE"
-	FUN   = "FUN"
-	IF    = "IF"
-	IN    = "IN"
-	LET   = "LET"
-	THEN  = "THEN"
-	TRUE  = "TRUE"
-	REC   = "REC"
+	ELSE
+	FALSE
+	FUN
+	IF
+	IN
+	LET
+	THEN
+	TRUE
+	REC
 )
 
-var keywords = map[string]TokenType{
+var tokens = [...]string{
+	ILLEGAL: "ILLEGAL",
+	EOF:     "EOF",
+
+	IDENT: "IDENT",
+	INT:   "INT",
+
+	ASSIGN:   "=",
+	ASTERISK: "*",
+	PLUS:     "+",
+
+	LT: "<",
+
+	SEMI:     ";",
+	SEMISEMI: ";;",
+
+	LPAREN: "(",
+	RPAREN: ")",
+
+	RARROW: "->",
+
+	ELSE:  "else",
+	FALSE: "false",
+	FUN:   "fun",
+	IF:    "if",
+	IN:    "in",
+	LET:   "let",
+	THEN:  "then",
+	TRUE:  "true",
+	REC:   "rec",
+}
+
+var keywords = map[string]Type{
 	"else":  ELSE,
 	"false": FALSE,
 	"fun":   FUN,
@@ -51,13 +85,28 @@ var keywords = map[string]TokenType{
 }
 
 type Token struct {
-	Type    TokenType
+	Type    Type
 	Literal string
 }
 
-func LookupIdent(ident string) TokenType {
+func New(t Type, ch byte) *Token {
+	return &Token{Type: t, Literal: string(ch)}
+}
+
+func Lookup(ident string) Type {
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}
 	return IDENT
+}
+
+func (t Type) String() string {
+	s := ""
+	if 0 <= t && t < Type(len(tokens)) {
+		s = tokens[t]
+	}
+	if s == "" {
+		s = "token(" + strconv.Itoa(int(t)) + ")"
+	}
+	return s
 }

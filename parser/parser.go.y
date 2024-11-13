@@ -47,12 +47,12 @@ statement
     }
     | LET IDENT ASSIGN expr
     {
-        $$ = ast.Declaration{Id: ast.Identifier{Token: $2, Value: $2.Literal}, Expr: $4}
+        $$ = ast.Declaration{Id: ast.Identifier{Value: $2.Literal}, Expr: $4}
         yylex.(*LexerWrapper).Result = $$
     }
     | LET REC IDENT ASSIGN FUN IDENT RARROW expr
     {
-        $$ = ast.RecDeclaration{Id: ast.Identifier{Token: $3, Value: $3.Literal}, Param: ast.Identifier{Token: $6, Value: $6.Literal}, BodyExpr: $8}
+        $$ = ast.RecDeclaration{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BodyExpr: $8}
         yylex.(*LexerWrapper).Result = $$
     }
 
@@ -81,25 +81,25 @@ expr
 letrecexpr
     : LET REC IDENT ASSIGN FUN IDENT RARROW expr IN expr
     {
-        $$ = ast.LetRecExpr{Token: $2, Id: ast.Identifier{Token: $3, Value: $3.Literal}, Param: ast.Identifier{Token: $6, Value: $6.Literal}, BindingExpr: $8, BodyExpr: $10}
+        $$ = ast.LetRecExpr{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BindingExpr: $8, BodyExpr: $10}
     }
 
 funexpr
     : FUN IDENT RARROW expr
     {
-        $$ = ast.FunExpr{Token: $1, Param: ast.Identifier{Token: $2, Value: $2.Literal}, BodyExpr: $4}
+        $$ = ast.FunExpr{Param: ast.Identifier{Value: $2.Literal}, BodyExpr: $4}
     }
 
 letexpr
     : LET IDENT ASSIGN expr IN expr
     {
-        $$ = ast.LetExpr{Token: $1, Id: ast.Identifier{Token: $2, Value: $2.Literal}, BindingExpr: $4, BodyExpr: $6}
+        $$ = ast.LetExpr{Id: ast.Identifier{Value: $2.Literal}, BindingExpr: $4, BodyExpr: $6}
     }
 
 ltexpr
     : pexpr LT pexpr
     {
-        $$ = ast.BinOpExpr{Token: $2, Left: $1, Operator: token.LT, Right: $3}
+        $$ = ast.BinOpExpr{Type: $2.Type, Left: $1, Right: $3}
     }
     | pexpr
     {
@@ -109,7 +109,7 @@ ltexpr
 pexpr
     : pexpr PLUS mexpr
     {
-        $$ = ast.BinOpExpr{Token: $2, Left: $1, Operator: token.PLUS, Right: $3}
+        $$ = ast.BinOpExpr{Type: $2.Type, Left: $1, Right: $3}
     }
     | mexpr
     {
@@ -119,7 +119,7 @@ pexpr
 mexpr
     : mexpr ASTERISK appexpr
     {
-        $$ = ast.BinOpExpr{Token: $2, Left: $1, Operator: token.ASTERISK, Right: $3}
+        $$ = ast.BinOpExpr{Type: $2.Type, Left: $1, Right: $3}
     }
     | appexpr
     {
@@ -129,7 +129,7 @@ mexpr
 appexpr
     : appexpr aexpr
     {
-        $$ = ast.AppExpr{Token: token.Token{Type: token.FUN, Literal: "("}, Function: $1, Argument: $2}
+        $$ = ast.AppExpr{Function: $1, Argument: $2}
     }
     | aexpr
     {
@@ -144,19 +144,19 @@ aexpr
             yylex.(*LexerWrapper).Error(fmt.Sprintf("invalid integer value: %s", $1.Literal))
             return 1
         }
-        $$ = ast.Integer{Token: $1, Value: intValue}
+        $$ = ast.Integer{Value: intValue}
     }
     | TRUE
     {
-        $$ = ast.Boolean{Token: $1, Value: true}
+        $$ = ast.Boolean{Value: true}
     }
     | FALSE
     {
-        $$ = ast.Boolean{Token: $1, Value: false}
+        $$ = ast.Boolean{Value: false}
     }
     | IDENT
     {
-        $$ = ast.Identifier{Token: $1, Value: $1.Literal}
+        $$ = ast.Identifier{Value: $1.Literal}
     }
     | LPAREN expr RPAREN
     {
@@ -166,7 +166,7 @@ aexpr
 ifexpr
     : IF expr THEN expr ELSE expr
     {
-        $$ = ast.IfExpr{Token: $1, Condition: $2, Consequence: $4, Alternative: $6}
+        $$ = ast.IfExpr{Condition: $2, Consequence: $4, Alternative: $6}
     }
 
 %%

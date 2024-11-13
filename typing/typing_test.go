@@ -4,7 +4,6 @@ import (
 	"go_type_inference/ast"
 	"go_type_inference/object"
 	"go_type_inference/parser"
-	"go_type_inference/token"
 	"reflect"
 	"testing"
 )
@@ -12,87 +11,103 @@ import (
 func TestInfer(t *testing.T) {
 	t.Parallel()
 
-	tests := map[string]struct {
-		input    string
-		expected object.InferredObject
+	testCases := []struct {
+		name  string
+		input string
+		want  object.InferredObject
 	}{
-		"identifier": {
-			input:    "i",
-			expected: object.TyInt{},
+		{
+			name:  "identifier",
+			input: "i",
+			want:  object.TyInt{},
 		},
-		"integer": {
-			input:    "2",
-			expected: object.TyInt{},
+		{
+			name:  "integer",
+			input: "2",
+			want:  object.TyInt{},
 		},
-		"boolean": {
-			input:    "true",
-			expected: object.TyBool{},
+		{
+			name:  "boolean",
+			input: "true",
+			want:  object.TyBool{},
 		},
-		"binary operator(PLUS)": {
-			input:    "2 + 3",
-			expected: object.TyInt{},
+		{
+			name:  "binary operator(PLUS)",
+			input: "2 + 3",
+			want:  object.TyInt{},
 		},
-		"binary operator(PLUS) identifier": {
-			input:    "i + v",
-			expected: object.TyInt{},
+		{
+			name:  "binary operator(PLUS) identifier",
+			input: "i + v",
+			want:  object.TyInt{},
 		},
-		"binary operator(ASTERISK)": {
-			input:    "2 * 3",
-			expected: object.TyInt{},
+		{
+			name:  "binary operator(ASTERISK)",
+			input: "2 * 3",
+			want:  object.TyInt{},
 		},
-		"binary operator(LT)": {
-			input:    "2 < 3",
-			expected: object.TyBool{},
+		{
+			name:  "binary operator(LT)",
+			input: "2 < 3",
+			want:  object.TyBool{},
 		},
-		"if true": {
-			input:    "if true then 2 else 3",
-			expected: object.TyInt{},
+		{
+			name:  "if true",
+			input: "if true then 2 else 3",
+			want:  object.TyInt{},
 		},
-		"if else": {
-			input:    "if false then 2 else 3",
-			expected: object.TyInt{},
+		{
+			name:  "if else",
+			input: "if false then 2 else 3",
+			want:  object.TyInt{},
 		},
-		"parentheses integer": {
-			input:    "(2 + 3)",
-			expected: object.TyInt{},
+		{
+			name:  "parentheses integer",
+			input: "(2 + 3)",
+			want:  object.TyInt{},
 		},
-		"nested if true": {
-			input:    "if (if false then true else false) then 2 else 3",
-			expected: object.TyInt{},
+		{
+			name:  "nested if true",
+			input: "if (if false then true else false) then 2 else 3",
+			want:  object.TyInt{},
 		},
-		"nested if identifier": {
-			input:    "if (if i < v then true else false) then 2 else i",
-			expected: object.TyInt{},
+		{
+			name:  "nested if identifier",
+			input: "if (if i < v then true else false) then 2 else i",
+			want:  object.TyInt{},
 		},
-		"let declaration": {
-			input:    "let x = 2",
-			expected: object.TyInt{},
+		{
+			name:  "let declaration",
+			input: "let x = 2",
+			want:  object.TyInt{},
 		},
-		"let in": {
-			input:    "let x = 2 in x + 3",
-			expected: object.TyInt{},
+		{
+			name:  "let in",
+			input: "let x = 2 in x + 3",
+			want:  object.TyInt{},
 		},
-		"nested let in": {
-			input:    "let x = 2 in let y = 3 in x + y",
-			expected: object.TyInt{},
+		{
+			name:  "nested let in",
+			input: "let x = 2 in let y = 3 in x + y",
+			want:  object.TyInt{},
 		},
 	}
 
-	for name, tt := range tests {
-		tt := tt
+	for _, tc := range testCases {
+		tc := tc
 
 		env := object.NewTypeEnvironment()
-		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "b"}, Value: "b"}, object.TyBool{})
-		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "i"}, Value: "i"}, object.TyInt{})
-		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "v"}, Value: "v"}, object.TyInt{})
+		env.Set(ast.Identifier{Value: "b"}, object.TyBool{})
+		env.Set(ast.Identifier{Value: "i"}, object.TyInt{})
+		env.Set(ast.Identifier{Value: "v"}, object.TyInt{})
 
-		t.Run(name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := Infer(parser.Parse(tt.input), env)
+			got := Infer(parser.Parse(tc.input), env)
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("expect: %s, but got: %s", tt.expected, got)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("expect: %s, but got: %s", tc.want, got)
 			}
 		})
 	}

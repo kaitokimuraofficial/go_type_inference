@@ -12,239 +12,234 @@ import (
 func TestEval(t *testing.T) {
 	t.Parallel()
 
-	tests := map[string]struct {
-		input    string
-		expected object.Value
+	testCases := []struct {
+		name  string
+		input string
+		want  object.Value
 	}{
-		"identifier": {
+		{
+			name:  "identifier",
 			input: "x",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 10,
 			},
 		},
-		"integer": {
+		{
+			name:  "integer",
 			input: "2",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 2,
 			},
 		},
-		"boolean": {
+		{
+			name:  "boolean",
 			input: "true",
-			expected: object.Boolean{
+			want: object.Boolean{
 				Value: true,
 			},
 		},
-		"binary operator(PLUS)": {
+		{
+			name:  "binary operator(PLUS)",
 			input: "2 + 3",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 5,
 			},
 		},
-		"binary operator(PLUS) identifier": {
+		{
+			name:  "binary operator(PLUS) identifier",
 			input: "i + x",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 11,
 			},
 		},
-		"binary operator(ASTERISK)": {
+		{
+			name:  "binary operator(ASTERISK)",
 			input: "2 * 3",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 6,
 			},
 		},
-		"binary operator(LT)": {
+		{
+			name:  "binary operator(LT)",
 			input: "2 < 3",
-			expected: object.Boolean{
+			want: object.Boolean{
 				Value: true,
 			},
 		},
-		"if true": {
+		{
+			name:  "if true",
 			input: "if true then 2 else 3",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 2,
 			},
 		},
-		"if else": {
+		{
+			name:  "if else",
 			input: "if false then 2 else 3",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 3,
 			},
 		},
-		"parentheses integer": {
+		{
+			name:  "parentheses integer",
 			input: "(2 + 3)",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 5,
 			},
 		},
-		"nested if true": {
+		{
+			name:  "nested if true",
 			input: "if (if false then true else false) then 2 else 3",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 3,
 			},
 		},
-		"nested if identifier": {
+		{
+			name:  "nested if identifier",
 			input: "if (if x < v then true else false) then 2 else i",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 1,
 			},
 		},
-		"let declaration": {
+		{
+			name:  "let declaration",
 			input: "let x = 2",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 2,
 			},
 		},
-		"let in": {
+		{
+			name:  "let in",
 			input: "let x = 2 in x + 3",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 5,
 			},
 		},
-		"nested let in": {
+		{
+			name:  "nested let in",
 			input: "let x = 2 in let y = 3 in x + y",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 5,
 			},
 		},
-		"fun abstraction": {
+		{
+			name:  "fun abstraction",
 			input: "fun y -> y + 3",
-			expected: object.Function{
+			want: object.Function{
 				Param: ast.Identifier{
-					Token: token.Token{Type: token.IDENT, Literal: "y"},
 					Value: "y",
 				},
 				Body: ast.BinOpExpr{
-					Token: token.Token{Type: token.PLUS, Literal: "+"},
+					Type: token.PLUS,
 					Left: ast.Identifier{
-						Token: token.Token{Type: token.IDENT, Literal: "y"},
 						Value: "y",
 					},
-					Operator: "+",
 					Right: ast.Integer{
-						Token: token.Token{Type: token.INT, Literal: "3"},
 						Value: 3,
 					},
 				},
 				Env: object.Environment{
 					Store: map[ast.Identifier]object.Value{
 						{
-							Token: token.Token{Type: token.IDENT, Literal: "i"},
 							Value: "i",
 						}: object.Integer{Value: 1},
 						{
-							Token: token.Token{Type: token.IDENT, Literal: "v"},
 							Value: "v",
 						}: object.Integer{Value: 5},
 						{
-							Token: token.Token{Type: token.IDENT, Literal: "x"},
 							Value: "x",
 						}: object.Integer{Value: 10},
 					},
 				},
 			},
 		},
-		"fun application-1": {
+		{
+			name:  "fun application-1",
 			input: "(fun x -> x + 3 ) 2",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 5,
 			},
 		},
-		"fun application-2": {
+		{
+			name:  "fun application-2",
 			input: "(fun param -> param + 3 ) 2",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 5,
 			},
 		},
-		"nested function application-1": {
+		{
+			name:  "nested function application-1",
 			input: "(fun x -> (fun y -> x + y)) 2",
-			expected: object.Function{
+			want: object.Function{
 				Param: ast.Identifier{
-					Token: token.Token{Type: token.IDENT, Literal: "y"},
 					Value: "y",
 				},
 				Body: ast.BinOpExpr{
-					Token: token.Token{Type: token.PLUS, Literal: "+"},
+					Type: token.PLUS,
 					Left: ast.Identifier{
-						Token: token.Token{Type: token.IDENT, Literal: "x"},
 						Value: "x",
 					},
-					Operator: "+",
 					Right: ast.Identifier{
-						Token: token.Token{Type: token.IDENT, Literal: "y"},
 						Value: "y",
 					},
 				},
 				Env: object.Environment{
 					Store: map[ast.Identifier]object.Value{
 						{
-							Token: token.Token{Type: token.IDENT, Literal: "i"},
 							Value: "i",
 						}: object.Integer{Value: 1},
 						{
-							Token: token.Token{Type: token.IDENT, Literal: "v"},
 							Value: "v",
 						}: object.Integer{Value: 5},
 						{
-							Token: token.Token{Type: token.IDENT, Literal: "x"},
 							Value: "x",
 						}: object.Integer{Value: 2},
 					},
 				},
 			},
 		},
-		"nested function application-2": {
+		{
+			name:  "nested function application-2",
 			input: "(fun x -> (fun y -> x + y)) 2 3",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 5,
 			},
 		},
-		"let rec declaration": {
+		{
+			name:  "let rec declaration",
 			input: "let rec f = fun n -> (if 10 < n then 1 else n * f (n + 1))",
-			expected: object.Function{
+			want: object.Function{
 				Param: ast.Identifier{
-					Token: token.Token{Type: token.IDENT, Literal: "n"},
 					Value: "n",
 				},
 				Body: ast.IfExpr{
-					Token: token.Token{Type: token.IF, Literal: "if"},
 					Condition: ast.BinOpExpr{
-						Token: token.Token{Type: token.LT, Literal: "<"},
+						Type: token.LT,
 						Left: ast.Integer{
-							Token: token.Token{Type: token.INT, Literal: "10"},
 							Value: 10,
 						},
-						Operator: "<",
 						Right: ast.Identifier{
-							Token: token.Token{Type: token.IDENT, Literal: "n"},
 							Value: "n",
 						},
 					},
 					Consequence: ast.Integer{
-						Token: token.Token{Type: token.INT, Literal: "1"},
 						Value: 1,
 					},
 					Alternative: ast.BinOpExpr{
-						Token: token.Token{Type: token.ASTERISK, Literal: "*"},
+						Type: token.ASTERISK,
 						Left: ast.Identifier{
-							Token: token.Token{Type: token.IDENT, Literal: "n"},
 							Value: "n",
 						},
-						Operator: "*",
 						Right: ast.AppExpr{
-							Token: token.Token{Type: token.FUN, Literal: "("},
 							Function: ast.Identifier{
-								Token: token.Token{Type: token.IDENT, Literal: "f"},
 								Value: "f",
 							},
 							Argument: ast.BinOpExpr{
-								Token: token.Token{Type: token.PLUS, Literal: "+"},
+								Type: token.PLUS,
 								Left: ast.Identifier{
-									Token: token.Token{Type: token.IDENT, Literal: "n"},
 									Value: "n",
 								},
-								Operator: "+",
 								Right: ast.Integer{
-									Token: token.Token{Type: token.INT, Literal: "1"},
 									Value: 1,
 								},
 							},
@@ -256,29 +251,30 @@ func TestEval(t *testing.T) {
 				},
 			},
 		},
-		"let rec expression": {
+		{
+			name:  "let rec expression",
 			input: "let rec fact = fun n -> (if 9 < n then 1 else n * (fact (n+1))) in fact 8",
-			expected: object.Integer{
+			want: object.Integer{
 				Value: 72,
 			},
 		},
 	}
 
-	for name, tt := range tests {
-		tt := tt
+	for _, tc := range testCases {
+		tc := tc
 
 		env := object.NewEnvironment()
-		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "i"}, Value: "i"}, object.Integer{Value: 1})
-		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "v"}, Value: "v"}, object.Integer{Value: 5})
-		env.Set(ast.Identifier{Token: token.Token{Type: token.IDENT, Literal: "x"}, Value: "x"}, object.Integer{Value: 10})
+		env.Set(ast.Identifier{Value: "i"}, object.Integer{Value: 1})
+		env.Set(ast.Identifier{Value: "v"}, object.Integer{Value: 5})
+		env.Set(ast.Identifier{Value: "x"}, object.Integer{Value: 10})
 
-		t.Run(name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := Eval(parser.Parse(tt.input), env)
+			got := Eval(parser.Parse(tc.input), env)
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("expect: %q, but got: %q", tt.expected, got)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("expect: %q, but got: %q", tc.want, got)
 			}
 		})
 	}
