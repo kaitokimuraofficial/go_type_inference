@@ -7,7 +7,6 @@ import (
 )
 
 type Node interface {
-	TokenLiteral() string
 	String() string
 }
 
@@ -37,17 +36,11 @@ type RecDeclaration struct {
 }
 
 func (s Statement) statementNode() {}
-func (s Statement) TokenLiteral() string {
-	return s.Expr.TokenLiteral()
-}
 func (s Statement) String() string {
 	return s.Expr.String()
 }
 
 func (d Declaration) statementNode() {}
-func (d Declaration) TokenLiteral() string {
-	return d.Expr.TokenLiteral()
-}
 func (d Declaration) String() string {
 	return fmt.Sprintf(
 		"let %s = %s",
@@ -57,9 +50,6 @@ func (d Declaration) String() string {
 }
 
 func (rd RecDeclaration) statementNode() {}
-func (rd RecDeclaration) TokenLiteral() string {
-	return rd.BodyExpr.TokenLiteral()
-}
 func (rd RecDeclaration) String() string {
 	return fmt.Sprintf(
 		"let rec %s = %s",
@@ -125,25 +115,16 @@ type LetRecExpr struct {
 }
 
 func (b Boolean) expressionNode() {}
-func (b Boolean) TokenLiteral() string {
-	return b.Token.Literal
-}
 func (b Boolean) String() string {
 	return strconv.FormatBool(b.Value)
 }
 
 func (i Integer) expressionNode() {}
-func (i Integer) TokenLiteral() string {
-	return i.Token.Literal
-}
 func (i Integer) String() string {
 	return strconv.Itoa(i.Value)
 }
 
 func (be BinOpExpr) expressionNode() {}
-func (be BinOpExpr) TokenLiteral() string {
-	return be.Token.Literal
-}
 func (be BinOpExpr) String() string {
 	return fmt.Sprintf(
 		"%s %s %s",
@@ -154,9 +135,6 @@ func (be BinOpExpr) String() string {
 }
 
 func (ie IfExpr) expressionNode() {}
-func (ie IfExpr) TokenLiteral() string {
-	return ie.Token.Literal
-}
 func (ie IfExpr) String() string {
 	return fmt.Sprintf(
 		"if %s then ( %s ) else ( %s )",
@@ -167,9 +145,6 @@ func (ie IfExpr) String() string {
 }
 
 func (le LetExpr) expressionNode() {}
-func (le LetExpr) TokenLiteral() string {
-	return le.Token.Literal
-}
 func (le LetExpr) String() string {
 	return fmt.Sprintf(
 		"let %s = %s in %s",
@@ -180,9 +155,6 @@ func (le LetExpr) String() string {
 }
 
 func (fe FunExpr) expressionNode() {}
-func (fe FunExpr) TokenLiteral() string {
-	return fe.Token.Literal
-}
 func (fe FunExpr) String() string {
 	return fmt.Sprintf(
 		"fun %s -> %s",
@@ -192,9 +164,6 @@ func (fe FunExpr) String() string {
 }
 
 func (ae AppExpr) expressionNode() {}
-func (ae AppExpr) TokenLiteral() string {
-	return ae.Token.Literal
-}
 func (ae AppExpr) String() string {
 	return fmt.Sprintf(
 		"(%s, %s)",
@@ -204,9 +173,6 @@ func (ae AppExpr) String() string {
 }
 
 func (lr LetRecExpr) expressionNode() {}
-func (lr LetRecExpr) TokenLiteral() string {
-	return lr.Token.Literal
-}
 func (lr LetRecExpr) String() string {
 	return fmt.Sprintf(
 		"let rec %s = fun %s -> %s in %s",
@@ -218,9 +184,6 @@ func (lr LetRecExpr) String() string {
 }
 
 func (i Identifier) expressionNode() {}
-func (i Identifier) TokenLiteral() string {
-	return i.Token.Literal
-}
 func (i Identifier) String() string {
 	return i.Value
 }
