@@ -22,13 +22,13 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.ch {
 	case '=':
-		tok = newToken(token.ASSIGN, l.ch)
+		tok = *token.New(token.ASSIGN, l.ch)
 	case '*':
-		tok = newToken(token.ASTERISK, l.ch)
+		tok = *token.New(token.ASTERISK, l.ch)
 	case '+':
-		tok = newToken(token.PLUS, l.ch)
+		tok = *token.New(token.PLUS, l.ch)
 	case '<':
-		tok = newToken(token.LT, l.ch)
+		tok = *token.New(token.LT, l.ch)
 	case ';':
 		if l.peakChar() == ';' {
 			ch := l.ch
@@ -36,12 +36,12 @@ func (l *Lexer) NextToken() token.Token {
 			literal := string(ch) + string(l.ch)
 			tok = token.Token{Type: token.SEMISEMI, Literal: literal}
 		} else {
-			tok = newToken(token.SEMI, l.ch)
+			tok = *token.New(token.SEMI, l.ch)
 		}
 	case '(':
-		tok = newToken(token.LPAREN, l.ch)
+		tok = *token.New(token.LPAREN, l.ch)
 	case ')':
-		tok = newToken(token.RPAREN, l.ch)
+		tok = *token.New(token.RPAREN, l.ch)
 	case '-':
 		if l.peakChar() == '>' {
 			ch := l.ch
@@ -49,7 +49,7 @@ func (l *Lexer) NextToken() token.Token {
 			literal := string(ch) + string(l.ch)
 			tok = token.Token{Type: token.RARROW, Literal: literal}
 		} else {
-			tok = newToken(token.ILLEGAL, l.ch)
+			tok = *token.New(token.ILLEGAL, l.ch)
 		}
 	case 0:
 		tok.Literal = ""
@@ -57,14 +57,14 @@ func (l *Lexer) NextToken() token.Token {
 	default:
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier()
-			tok.Type = token.LookupIdent(tok.Literal)
+			tok.Type = token.Lookup(tok.Literal)
 			return tok
 		} else if isDigit(l.ch) {
 			tok.Type = token.INT
 			tok.Literal = l.readNumber()
 			return tok
 		} else {
-			tok = newToken(token.ILLEGAL, l.ch)
+			tok = *token.New(token.ILLEGAL, l.ch)
 		}
 	}
 	l.readChar()
@@ -119,8 +119,4 @@ func isDigit(ch byte) bool {
 
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == ';'
-}
-
-func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(ch)}
 }

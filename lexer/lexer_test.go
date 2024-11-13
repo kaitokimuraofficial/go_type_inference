@@ -11,9 +11,9 @@ func TestNextToken(t *testing.T) {
 ;;
 `
 
-	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
+	wants := []struct {
+		Type    token.Type
+		Literal string
 	}{
 		{token.ASSIGN, "="},
 		{token.ASTERISK, "*"},
@@ -37,15 +37,15 @@ func TestNextToken(t *testing.T) {
 
 	l := New(input)
 
-	for _, tt := range tests {
+	for _, want := range wants {
 		got := l.NextToken()
 
-		if got.Type != tt.expectedType {
-			t.Errorf("[TOKEN TYPE ERROR] expect: %q, but got: %q", tt.expectedType, got.Type)
+		if got.Type != want.Type {
+			t.Errorf("different token types: got %q, but got: %q", got.Type, want.Type)
 		}
 
-		if got.Literal != tt.expectedLiteral {
-			t.Errorf("[TOKEN LITERAL ERROR] expect: %q, but got: %q", tt.expectedLiteral, got.Literal)
+		if got.Literal != want.Literal {
+			t.Errorf("different token literals: got %q, but got: %q", got.Literal, want.Literal)
 		}
 	}
 
