@@ -59,55 +59,46 @@ func (rd RecDeclaration) String() string {
 }
 
 type Integer struct {
-	Token token.Token
 	Value int
 }
 
 type Boolean struct {
-	Token token.Token
 	Value bool
 }
 
 type Identifier struct {
-	Token token.Token
 	Value string
 }
 
 type BinOpExpr struct {
-	Token    token.Token
-	Left     Expr
-	Operator string
-	Right    Expr
+	Type  token.Type
+	Left  Expr
+	Right Expr
 }
 
 type IfExpr struct {
-	Token       token.Token
 	Condition   Expr
 	Consequence Expr
 	Alternative Expr
 }
 
 type LetExpr struct {
-	Token       token.Token
 	Id          Identifier
 	BindingExpr Expr
 	BodyExpr    Expr
 }
 
 type FunExpr struct {
-	Token    token.Token
 	Param    Identifier
 	BodyExpr Expr
 }
 
 type AppExpr struct {
-	Token    token.Token
 	Function Expr
 	Argument Expr
 }
 
 type LetRecExpr struct {
-	Token       token.Token
 	Id          Identifier
 	Param       Identifier
 	BindingExpr Expr
@@ -129,7 +120,7 @@ func (be BinOpExpr) String() string {
 	return fmt.Sprintf(
 		"%s %s %s",
 		be.Left.String(),
-		be.Operator,
+		be.Type,
 		be.Left.String(),
 	)
 }
