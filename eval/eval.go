@@ -72,10 +72,10 @@ func evalBinOpExpr(be ast.BinOpExpr, env *object.Environment) object.Value {
 	rv := Eval(be.Right, env)
 
 	if lv.Type() != object.INTEGER_VAL || rv.Type() != object.INTEGER_VAL {
-		log.Fatalf("Both arguments must be integers for operator %s", be.Token.Type)
+		log.Fatalf("Both arguments must be integers for operator %d", be.Type)
 	}
 
-	switch be.Token.Type {
+	switch be.Type {
 	case token.PLUS:
 		return object.Integer{Value: lv.(object.Integer).Value + rv.(object.Integer).Value}
 	case token.ASTERISK:

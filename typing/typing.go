@@ -57,10 +57,10 @@ func inferBinOpExpr(be ast.BinOpExpr, env *object.TypeEnvironment) object.Inferr
 	rt := Infer(be.Right, env)
 
 	if lt.Type() != object.INTEGER_TYPE || rt.Type() != object.INTEGER_TYPE {
-		log.Fatalf("Both arguments must be Integer for operator %s", be.Token.Type)
+		log.Fatalf("Both arguments must be Integer for operator %d", be.Type)
 	}
 
-	switch be.Token.Type {
+	switch be.Type {
 	case token.PLUS:
 		return object.TyInt{}
 	case token.ASTERISK:
