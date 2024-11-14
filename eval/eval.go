@@ -67,12 +67,12 @@ func evalIdentifier(i ast.Identifier, env *Environment) Value {
 func evalBinOpExpr(e ast.BinOpExpr, env *Environment) Value {
 	lv, ok := Eval(e.Left, env).(*Integer)
 	if !ok {
-		log.Fatalf("left operand is not Integer")
+		log.Fatal("left operand is not Integer")
 	}
 
 	rv, ok := Eval(e.Right, env).(*Integer)
 	if !ok {
-		log.Fatalf("right operand is not Integer")
+		log.Fatal("right operand is not Integer")
 	}
 
 	switch e.Op {
@@ -92,7 +92,7 @@ func evalBinOpExpr(e ast.BinOpExpr, env *Environment) Value {
 func evalIfExpr(e ast.IfExpr, env *Environment) Value {
 	v, ok := Eval(e.Condition, env).(*Boolean)
 	if !ok {
-		log.Fatalf("condition is not Boolean")
+		log.Fatal("condition is not Boolean")
 	}
 
 	if v.Value {
@@ -114,7 +114,7 @@ func evalAppExpr(e ast.AppExpr, env *Environment) Value {
 
 	v, ok := fn.(*Function)
 	if !ok {
-		log.Fatalf("left-hand side expression is not a function abstraction")
+		log.Fatal("left-hand side expression is not a function abstraction")
 	}
 
 	env.Set(v.Param, arg)
