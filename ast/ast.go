@@ -1,180 +1,141 @@
 package ast
 
-import (
-	"fmt"
-	"go_type_inference/token"
-	"strconv"
-)
+import "go_type_inference/token"
 
 type Node interface {
-	String() string
-}
-
-type Stmt interface {
-	Node
-	statementNode()
+	node()
 }
 
 type Expr interface {
 	Node
-	expressionNode()
+	exprNode()
 }
 
-type Statement struct {
-	Expr Expr
+type Stmt interface {
+	Node
+	stmtNode()
 }
 
-type Declaration struct {
-	Expr Expr
-	Id   Identifier
+type Decl interface {
+	Node
+	declNode()
 }
 
-type RecDeclaration struct {
-	Id       Identifier
-	Param    Identifier
-	BodyExpr Expr
-}
+// ----------------------------------------------------------------------------
+// Expressions
 
-func (s Statement) statementNode() {}
-func (s Statement) String() string {
-	return s.Expr.String()
-}
+type (
+	Integer struct {
+		Value int
+	}
 
-func (d Declaration) statementNode() {}
-func (d Declaration) String() string {
-	return fmt.Sprintf(
-		"let %s = %s",
-		d.Id.String(),
-		d.Expr.String(),
-	)
-}
+	Boolean struct {
+		Value bool
+	}
 
-func (rd RecDeclaration) statementNode() {}
-func (rd RecDeclaration) String() string {
-	return fmt.Sprintf(
-		"let rec %s = %s",
-		rd.Id.String(),
-		rd.BodyExpr.String(),
-	)
-}
+	Identifier struct {
+		Value string
+	}
 
-type Integer struct {
-	Value int
-}
+	BinOpExpr struct {
+		Op    token.Type
+		Left  Expr
+		Right Expr
+	}
 
-type Boolean struct {
-	Value bool
-}
+	IfExpr struct {
+		Condition   Expr
+		Consequence Expr
+		Alternative Expr
+	}
 
-type Identifier struct {
-	Value string
-}
+	LetExpr struct {
+		Id          Identifier
+		BindingExpr Expr
+		BodyExpr    Expr
+	}
 
-type BinOpExpr struct {
-	Type  token.Type
-	Left  Expr
-	Right Expr
-}
+	FunExpr struct {
+		Param    Identifier
+		BodyExpr Expr
+	}
 
-type IfExpr struct {
-	Condition   Expr
-	Consequence Expr
-	Alternative Expr
-}
+	AppExpr struct {
+		Function Expr
+		Argument Expr
+	}
 
-type LetExpr struct {
-	Id          Identifier
-	BindingExpr Expr
-	BodyExpr    Expr
-}
+	LetRecExpr struct {
+		Id          Identifier
+		Param       Identifier
+		BindingExpr Expr
+		BodyExpr    Expr
+	}
+)
 
-type FunExpr struct {
-	Param    Identifier
-	BodyExpr Expr
-}
+func (*Integer) node()    {}
+func (*Boolean) node()    {}
+func (*Identifier) node() {}
+func (*BinOpExpr) node()  {}
+func (*IfExpr) node()     {}
+func (*LetExpr) node()    {}
+func (*FunExpr) node()    {}
+func (*AppExpr) node()    {}
+func (*LetRecExpr) node() {}
 
-type AppExpr struct {
-	Function Expr
-	Argument Expr
-}
+// exprNode() ensures that only expression nodes can be
+// assigned to an Expr
+func (*Integer) exprNode()    {}
+func (*Boolean) exprNode()    {}
+func (*Identifier) exprNode() {}
+func (*BinOpExpr) exprNode()  {}
+func (*IfExpr) exprNode()     {}
+func (*LetExpr) exprNode()    {}
+func (*FunExpr) exprNode()    {}
+func (*AppExpr) exprNode()    {}
+func (*LetRecExpr) exprNode() {}
 
-type LetRecExpr struct {
-	Id          Identifier
-	Param       Identifier
-	BindingExpr Expr
-	BodyExpr    Expr
-}
+// ----------------------------------------------------------------------------
+// Statements
 
-func (b Boolean) expressionNode() {}
-func (b Boolean) String() string {
-	return strconv.FormatBool(b.Value)
-}
+type (
+	DeclStmt struct {
+		Decl Decl
+	}
 
-func (i Integer) expressionNode() {}
-func (i Integer) String() string {
-	return strconv.Itoa(i.Value)
-}
+	ExprStmt struct {
+		Expr Expr
+	}
+)
 
-func (be BinOpExpr) expressionNode() {}
-func (be BinOpExpr) String() string {
-	return fmt.Sprintf(
-		"%s %s %s",
-		be.Left.String(),
-		be.Type,
-		be.Left.String(),
-	)
-}
+func (*DeclStmt) node() {}
+func (*ExprStmt) node() {}
 
-func (ie IfExpr) expressionNode() {}
-func (ie IfExpr) String() string {
-	return fmt.Sprintf(
-		"if %s then ( %s ) else ( %s )",
-		ie.Condition.String(),
-		ie.Consequence.String(),
-		ie.Alternative.String(),
-	)
-}
+// stmtNode() ensures that only statement nodes can be
+// assigned to a Stmt.
+func (*DeclStmt) stmtNode() {}
+func (*ExprStmt) stmtNode() {}
 
-func (le LetExpr) expressionNode() {}
-func (le LetExpr) String() string {
-	return fmt.Sprintf(
-		"let %s = %s in %s",
-		le.Id.String(),
-		le.BindingExpr.String(),
-		le.BodyExpr.String(),
-	)
-}
+// ----------------------------------------------------------------------------
+// Declarations
 
-func (fe FunExpr) expressionNode() {}
-func (fe FunExpr) String() string {
-	return fmt.Sprintf(
-		"fun %s -> %s",
-		fe.Param.String(),
-		fe.BodyExpr.String(),
-	)
-}
+type (
+	LetDecl struct {
+		Id   Identifier
+		Expr Expr
+	}
 
-func (ae AppExpr) expressionNode() {}
-func (ae AppExpr) String() string {
-	return fmt.Sprintf(
-		"(%s, %s)",
-		ae.Function.String(),
-		ae.Argument.String(),
-	)
-}
+	RecDecl struct {
+		Id       Identifier
+		Param    Identifier
+		BodyExpr Expr
+	}
+)
 
-func (lr LetRecExpr) expressionNode() {}
-func (lr LetRecExpr) String() string {
-	return fmt.Sprintf(
-		"let rec %s = fun %s -> %s in %s",
-		lr.Id.String(),
-		lr.Param.String(),
-		lr.BindingExpr.String(),
-		lr.BodyExpr.String(),
-	)
-}
+func (*LetDecl) node() {}
+func (*RecDecl) node() {}
 
-func (i Identifier) expressionNode() {}
-func (i Identifier) String() string {
-	return i.Value
-}
+// declNode() ensures that only declaration nodes can be
+// assigned to a Decl.
+func (*LetDecl) declNode() {}
+func (*RecDecl) declNode() {}
