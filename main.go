@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"go_type_inference/ast"
 	"go_type_inference/eval"
-	"go_type_inference/object"
 	"go_type_inference/parser"
 )
 
@@ -14,10 +14,17 @@ func main() {
 	p := parser.Parse(input)
 
 	// Make Environment
-	env := object.NewEnvironment()
+	env := &eval.Environment{Store: make(map[ast.Identifier]eval.Value)}
 
 	// Evaluate AST made from parser.Parse
 	e := eval.Eval(p, env)
 
-	fmt.Println(e.Inspect())
+	switch e := e.(type) {
+	case *eval.Integer:
+		fmt.Printf("%d", e.Value)
+	case *eval.Boolean:
+		fmt.Printf("%t", e.Value)
+	case *eval.Function:
+		fmt.Printf("function")
+	}
 }
