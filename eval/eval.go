@@ -2,129 +2,128 @@ package eval
 
 import (
 	"go_type_inference/ast"
-	"go_type_inference/object"
 	"go_type_inference/token"
 	"log"
 )
 
-func Eval(node ast.Node, env *object.Environment) object.Value {
-	switch node := node.(type) {
-	case ast.Statement:
-		return evalStatement(node, env)
-	case ast.Declaration:
-		return evalDeclaration(node, env)
-	case ast.RecDeclaration:
-		return evalRecDeclaration(node, env)
-	case ast.Identifier:
-		return evalIdentifier(node, env)
-	case ast.Integer:
-		return object.Integer{Value: node.Value}
-	case ast.Boolean:
-		return object.Boolean{Value: node.Value}
-	case ast.FunExpr:
-		return object.Function{Param: node.Param, Body: node.BodyExpr, Env: *env}
-	case ast.BinOpExpr:
-		return evalBinOpExpr(node, env)
-	case ast.IfExpr:
-		return evalIfExpr(node, env)
-	case ast.LetExpr:
-		return evalLetExpr(node, env)
-	case ast.AppExpr:
-		return evalAppExpr(node, env)
-	case ast.LetRecExpr:
-		return evalLetRecExpr(node, env)
+func Eval(node ast.Node, env *Environment) Value {
+	switch n := node.(type) {
+	case *ast.DeclStmt:
+		return Eval(n.Decl, env)
+	case *ast.ExprStmt:
+		return Eval(n.Expr, env)
+	case *ast.LetDecl:
+		return evalLetDecl(*n, env)
+	case *ast.RecDecl:
+		return evalRecDecl(*n, env)
+	case *ast.Integer:
+		return &Integer{Value: n.Value}
+	case *ast.Boolean:
+		return &Boolean{Value: n.Value}
+	case *ast.Identifier:
+		return evalIdentifier(*n, env)
+	case *ast.BinOpExpr:
+		return evalBinOpExpr(*n, env)
+	case *ast.IfExpr:
+		return evalIfExpr(*n, env)
+	case *ast.LetExpr:
+		return evalLetExpr(*n, env)
+	case *ast.FunExpr:
+		return &Function{Param: n.Param, Body: n.BodyExpr, Env: *env}
+	case *ast.AppExpr:
+		return evalAppExpr(*n, env)
+	case *ast.LetRecExpr:
+		return evalLetRecExpr(*n, env)
 	default:
-		log.Fatalf("Evaluator not implemented for node: %s", node.String())
+		log.Fatalf("unexpected node type: %T", n)
 	}
 
 	return nil
 }
 
-func evalStatement(s ast.Statement, env *object.Environment) object.Value {
-	return Eval(s.Expr, env)
-}
-
-func evalDeclaration(d ast.Declaration, env *object.Environment) object.Value {
+func evalLetDecl(d ast.LetDecl, env *Environment) Value {
 	v := Eval(d.Expr, env)
 	env.Set(d.Id, v)
 	return v
 }
 
-func evalRecDeclaration(rd ast.RecDeclaration, env *object.Environment) object.Value {
-	dummyEnv := object.NewEnvironment()
-	f := object.Function{Param: rd.Param, Body: rd.BodyExpr, Env: *dummyEnv}
-	env.Set(rd.Id, f)
+func evalRecDecl(d ast.RecDecl, env *Environment) Value {
+	emptyEnv := &Environment{Store: make(map[ast.Identifier]Value)}
+	f := &Function{Param: d.Param, Body: d.BodyExpr, Env: *emptyEnv}
+	env.Set(d.Id, f)
 	return f
 }
 
-func evalIdentifier(i ast.Identifier, env *object.Environment) object.Value {
+func evalIdentifier(i ast.Identifier, env *Environment) Value {
 	val, ok := env.Get(i)
 	if !ok {
-		log.Fatalf("Variable '%s' not bound", i.Value)
+		log.Fatalf("variable %q is not bound", i.Value)
 	}
 	return val
 }
 
 // While the binary operator operands are not strictly required to be integers,
 // this program expects both operands to be integers.
-func evalBinOpExpr(be ast.BinOpExpr, env *object.Environment) object.Value {
-	lv := Eval(be.Left, env)
-	rv := Eval(be.Right, env)
-
-	if lv.Type() != object.INTEGER_VAL || rv.Type() != object.INTEGER_VAL {
-		log.Fatalf("Both arguments must be integers for operator %d", be.Type)
+func evalBinOpExpr(e ast.BinOpExpr, env *Environment) Value {
+	lv, ok := Eval(e.Left, env).(*Integer)
+	if !ok {
+		log.Fatalf("left operand is not Integer")
 	}
 
-	switch be.Type {
+	rv, ok := Eval(e.Right, env).(*Integer)
+	if !ok {
+		log.Fatalf("right operand is not Integer")
+	}
+
+	switch e.Op {
 	case token.PLUS:
-		return object.Integer{Value: lv.(object.Integer).Value + rv.(object.Integer).Value}
+		return &Integer{Value: lv.Value + rv.Value}
 	case token.ASTERISK:
-		return object.Integer{Value: lv.(object.Integer).Value * rv.(object.Integer).Value}
+		return &Integer{Value: lv.Value * rv.Value}
 	case token.LT:
-		return object.Boolean{Value: lv.(object.Integer).Value < rv.(object.Integer).Value}
+		return &Boolean{Value: lv.Value < rv.Value}
 	default:
-		log.Fatal("The combination of binary operator and argument is incorrect: BinOp")
+		log.Fatalf("%s is not supported operator", e.Op)
 	}
 
 	return nil
 }
 
-func evalIfExpr(ie ast.IfExpr, env *object.Environment) object.Value {
-	cnd := Eval(ie.Condition, env)
-
-	if cnd.Type() != object.BOOLEAN_VAL {
-		log.Fatal("Condition must be boolean: If")
+func evalIfExpr(e ast.IfExpr, env *Environment) Value {
+	v, ok := Eval(e.Condition, env).(*Boolean)
+	if !ok {
+		log.Fatalf("condition is not Boolean")
 	}
 
-	if cnd.(object.Boolean).Value {
-		return Eval(ie.Consequence, env)
+	if v.Value {
+		return Eval(e.Consequence, env)
 	}
 
-	return Eval(ie.Alternative, env)
+	return Eval(e.Alternative, env)
 }
 
-func evalLetExpr(le ast.LetExpr, env *object.Environment) object.Value {
-	v := Eval(le.BindingExpr, env)
-	env.Set(le.Id, v)
-	return Eval(le.BodyExpr, env)
+func evalLetExpr(e ast.LetExpr, env *Environment) Value {
+	v := Eval(e.BindingExpr, env)
+	env.Set(e.Id, v)
+	return Eval(e.BodyExpr, env)
 }
 
-func evalAppExpr(ae ast.AppExpr, env *object.Environment) object.Value {
-	fn := Eval(ae.Function, env)
-	arg := Eval(ae.Argument, env)
+func evalAppExpr(e ast.AppExpr, env *Environment) Value {
+	fn := Eval(e.Function, env)
+	arg := Eval(e.Argument, env)
 
-	if fn, ok := fn.(object.Function); ok {
-		env.Set(fn.Param, arg)
-		return Eval(fn.Body, env)
+	v, ok := fn.(*Function)
+	if !ok {
+		log.Fatalf("left-hand side expression is not a function abstraction")
 	}
 
-	log.Fatalf("Non-function value applied: %v", fn)
-	return nil
-
+	env.Set(v.Param, arg)
+	return Eval(v.Body, env)
 }
 
-func evalLetRecExpr(lr ast.LetRecExpr, env *object.Environment) object.Value {
-	f := object.Function{Param: lr.Param, Body: lr.BindingExpr, Env: *env}
-	env.Set(lr.Id, f)
-	return Eval(lr.BodyExpr, env)
+func evalLetRecExpr(e ast.LetRecExpr, env *Environment) Value {
+	emptyEnv := &Environment{Store: make(map[ast.Identifier]Value)}
+	f := &Function{Param: e.Param, Body: e.BindingExpr, Env: *emptyEnv}
+	env.Set(e.Id, f)
+	return Eval(e.BodyExpr, env)
 }

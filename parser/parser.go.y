@@ -2,31 +2,31 @@
 package parser
 
 import (
-    "fmt"
-    "strconv"
-    "go_type_inference/ast"
-    "go_type_inference/lexer"
-    "go_type_inference/token"
+	"fmt"
+	"go_type_inference/ast"
+	"go_type_inference/lexer"
+	"go_type_inference/token"
+	"strconv"
 )
 %}
 
 %union{
-    statement ast.Stmt
     expr ast.Expr
+    statement ast.Stmt
     token token.Token
 }
 
 %type<statement> statement
 %type<expr> expr
-%type<expr> letrecexpr
-%type<expr> funexpr
-%type<expr> letexpr
 %type<expr> ltexpr
+%type<expr> ifexpr
+%type<expr> letexpr
+%type<expr> funexpr
+%type<expr> letrecexpr
 %type<expr> pexpr
 %type<expr> mexpr
 %type<expr> appexpr
 %type<expr> aexpr
-%type<expr> ifexpr
 
 %token<token> IDENT
 %token<token> INT TRUE FALSE
@@ -42,34 +42,34 @@ import (
 statement
     : expr
     {
-        $$ = ast.Statement{Expr: $1}
+        $$ = &ast.ExprStmt{Expr: $1}
         yylex.(*LexerWrapper).Result = $$
     }
     | LET IDENT ASSIGN expr
     {
-        $$ = ast.Declaration{Id: ast.Identifier{Value: $2.Literal}, Expr: $4}
+        $$ = &ast.DeclStmt{Decl: &ast.LetDecl{Id: ast.Identifier{Value: $2.Literal}, Expr: $4}}
         yylex.(*LexerWrapper).Result = $$
     }
     | LET REC IDENT ASSIGN FUN IDENT RARROW expr
     {
-        $$ = ast.RecDeclaration{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BodyExpr: $8}
+        $$ = &ast.DeclStmt{Decl: &ast.RecDecl{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BodyExpr: $8}}
         yylex.(*LexerWrapper).Result = $$
     }
 
 expr
-    : ifexpr
+    : ltexpr
     {
         $$ = $1
     }
-    | letexpr
-    {
-        $$ = $1
-    }
-    | ltexpr
+    | ifexpr
     {
         $$ = $1
     }
     | funexpr
+    {
+        $$ = $1
+    }
+    | letexpr
     {
         $$ = $1
     }
@@ -78,62 +78,68 @@ expr
         $$ = $1
     }
 
-letrecexpr
-    : LET REC IDENT ASSIGN FUN IDENT RARROW expr IN expr
+ltexpr
+    : pexpr
     {
-        $$ = ast.LetRecExpr{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BindingExpr: $8, BodyExpr: $10}
+        $$ = $1
+    }
+    | pexpr LT pexpr
+    {
+        $$ = &ast.BinOpExpr{Op: $2.Type, Left: $1, Right: $3}
     }
 
-funexpr
-    : FUN IDENT RARROW expr
+ifexpr
+    : IF expr THEN expr ELSE expr
     {
-        $$ = ast.FunExpr{Param: ast.Identifier{Value: $2.Literal}, BodyExpr: $4}
+        $$ = &ast.IfExpr{Condition: $2, Consequence: $4, Alternative: $6}
     }
 
 letexpr
     : LET IDENT ASSIGN expr IN expr
     {
-        $$ = ast.LetExpr{Id: ast.Identifier{Value: $2.Literal}, BindingExpr: $4, BodyExpr: $6}
+        $$ = &ast.LetExpr{Id: ast.Identifier{Value: $2.Literal}, BindingExpr: $4, BodyExpr: $6}
     }
 
-ltexpr
-    : pexpr LT pexpr
+funexpr
+    : FUN IDENT RARROW expr
     {
-        $$ = ast.BinOpExpr{Type: $2.Type, Left: $1, Right: $3}
+        $$ = &ast.FunExpr{Param: ast.Identifier{Value: $2.Literal}, BodyExpr: $4}
     }
-    | pexpr
+
+letrecexpr
+    : LET REC IDENT ASSIGN FUN IDENT RARROW expr IN expr
     {
-        $$ = $1
+        $$ = &ast.LetRecExpr{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BindingExpr: $8, BodyExpr: $10}
     }
 
 pexpr
-    : pexpr PLUS mexpr
-    {
-        $$ = ast.BinOpExpr{Type: $2.Type, Left: $1, Right: $3}
-    }
-    | mexpr
+    : mexpr
     {
         $$ = $1
+    }
+    | pexpr PLUS mexpr
+    {
+        $$ = &ast.BinOpExpr{Op: $2.Type, Left: $1, Right: $3}
     }
 
 mexpr
-    : mexpr ASTERISK appexpr
-    {
-        $$ = ast.BinOpExpr{Type: $2.Type, Left: $1, Right: $3}
-    }
-    | appexpr
+    : appexpr
     {
         $$ = $1
+    }
+    | mexpr ASTERISK appexpr
+    {
+        $$ = &ast.BinOpExpr{Op: $2.Type, Left: $1, Right: $3}
     }
 
 appexpr
-    : appexpr aexpr
-    {
-        $$ = ast.AppExpr{Function: $1, Argument: $2}
-    }
-    | aexpr
+    : aexpr
     {
         $$ = $1
+    }
+    | appexpr aexpr
+    {
+        $$ = &ast.AppExpr{Function: $1, Argument: $2}
     }
 
 aexpr
@@ -142,31 +148,25 @@ aexpr
         intValue, err := strconv.Atoi($1.Literal)
         if err != nil {
             yylex.(*LexerWrapper).Error(fmt.Sprintf("invalid integer value: %s", $1.Literal))
-            return 1
+            return -1
         }
-        $$ = ast.Integer{Value: intValue}
+        $$ = &ast.Integer{Value: intValue}
     }
     | TRUE
     {
-        $$ = ast.Boolean{Value: true}
+        $$ = &ast.Boolean{Value: true}
     }
     | FALSE
     {
-        $$ = ast.Boolean{Value: false}
+        $$ = &ast.Boolean{Value: false}
     }
     | IDENT
     {
-        $$ = ast.Identifier{Value: $1.Literal}
+        $$ = &ast.Identifier{Value: $1.Literal}
     }
     | LPAREN expr RPAREN
     {
         $$ = $2
-    }
-
-ifexpr
-    : IF expr THEN expr ELSE expr
-    {
-        $$ = ast.IfExpr{Condition: $2, Consequence: $4, Alternative: $6}
     }
 
 %%

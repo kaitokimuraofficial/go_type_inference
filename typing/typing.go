@@ -2,97 +2,95 @@ package typing
 
 import (
 	"go_type_inference/ast"
-	"go_type_inference/object"
 	"go_type_inference/token"
 	"log"
 )
 
-func Infer(node ast.Node, env *object.TypeEnvironment) object.InferredObject {
-	switch node := node.(type) {
-	case ast.Statement:
-		return inferStatement(node, env)
-	case ast.Declaration:
-		return inferDeclaration(node, env)
-	case ast.Identifier:
-		return inferIdentifier(node, env)
-	case ast.Integer:
-		return object.TyInt{}
-	case ast.Boolean:
-		return object.TyBool{}
-	case ast.BinOpExpr:
-		return inferBinOpExpr(node, env)
-	case ast.IfExpr:
-		return inferIfExpr(node, env)
-	case ast.LetExpr:
-		return inferLetExpr(node, env)
+func Infer(node ast.Node, env *Environment) Type {
+	switch n := node.(type) {
+	case *ast.DeclStmt:
+		return Infer(n.Decl, env)
+	case *ast.ExprStmt:
+		return Infer(n.Expr, env)
+	case *ast.LetDecl:
+		return inferLetDecl(*n, env)
+	case *ast.Integer:
+		return &TyInt{}
+	case *ast.Boolean:
+		return &TyBool{}
+	case *ast.Identifier:
+		return inferIdentifier(*n, env)
+	case *ast.BinOpExpr:
+		return inferBinOpExpr(*n, env)
+	case *ast.IfExpr:
+		return inferIfExpr(*n, env)
+	case *ast.LetExpr:
+		return inferLetExpr(*n, env)
 	default:
-		log.Fatalf("Type inference not implemented for node type: %s", node.String())
+		log.Fatalf("unexpected node type: %T", n)
 	}
 
 	return nil
 }
 
-func inferStatement(s ast.Statement, env *object.TypeEnvironment) object.InferredObject {
-	return Infer(s.Expr, env)
+func inferLetDecl(d ast.LetDecl, env *Environment) Type {
+	v := Infer(d.Expr, env)
+	env.Set(d.Id, v)
+	return v
 }
 
-func inferDeclaration(d ast.Declaration, env *object.TypeEnvironment) object.InferredObject {
-	t := Infer(d.Expr, env)
-	env.Set(d.Id, t)
-	return t
-}
-
-func inferIdentifier(i ast.Identifier, env *object.TypeEnvironment) object.InferredObject {
+func inferIdentifier(i ast.Identifier, env *Environment) Type {
 	t, ok := env.Get(i)
 	if !ok {
-		log.Fatal("Variable not bound")
+		log.Fatalf("variable %q is not bound", i.Value)
 	}
 	return t
 }
 
 // While the binary operator operands are not strictly required to be integers,
 // this program expects both operands to be integers.
-func inferBinOpExpr(be ast.BinOpExpr, env *object.TypeEnvironment) object.InferredObject {
-	lt := Infer(be.Left, env)
-	rt := Infer(be.Right, env)
-
-	if lt.Type() != object.INTEGER_TYPE || rt.Type() != object.INTEGER_TYPE {
-		log.Fatalf("Both arguments must be Integer for operator %d", be.Type)
+func inferBinOpExpr(e ast.BinOpExpr, env *Environment) Type {
+	_, ok := Infer(e.Left, env).(*TyInt)
+	if !ok {
+		log.Fatalf("left operand type is not TyInt")
 	}
 
-	switch be.Type {
+	_, ok = Infer(e.Right, env).(*TyInt)
+	if !ok {
+		log.Fatalf("right operand type is not TyInt")
+	}
+
+	switch e.Op {
 	case token.PLUS:
-		return object.TyInt{}
+		return &TyInt{}
 	case token.ASTERISK:
-		return object.TyInt{}
+		return &TyInt{}
 	case token.LT:
-		return object.TyBool{}
+		return &TyBool{}
 	default:
-		log.Fatal("The combination of binary operator and argument is incorrect: BinOp")
+		log.Fatalf("%s is not supported operator", e.Op)
 	}
 
 	return nil
 }
 
-func inferIfExpr(ie ast.IfExpr, env *object.TypeEnvironment) object.InferredObject {
-	cndType := Infer(ie.Condition, env)
-	consType := Infer(ie.Consequence, env)
-	altType := Infer(ie.Alternative, env)
-
-	if cndType.Type() != object.BOOLEAN_TYPE {
-		log.Fatal("Not Implemented!")
+func inferIfExpr(e ast.IfExpr, env *Environment) Type {
+	_, ok := Infer(e.Condition, env).(*TyBool)
+	if !ok {
+		log.Fatalf("condition is not Boolean")
 	}
 
-	if consType.Type() == altType.Type() {
-		return consType
-	}
+	cons := Infer(e.Consequence, env)
+	alt := Infer(e.Alternative, env)
 
-	log.Fatalf("consequence and alternative types do not match: If")
-	return nil
+	if cons == alt {
+		return cons
+	}
+	return alt
 }
 
-func inferLetExpr(le ast.LetExpr, env *object.TypeEnvironment) object.InferredObject {
-	t := Infer(le.BindingExpr, env)
-	env.Set(le.Id, t)
-	return Infer(le.BodyExpr, env)
+func inferLetExpr(e ast.LetExpr, env *Environment) Type {
+	t := Infer(e.BindingExpr, env)
+	env.Set(e.Id, t)
+	return Infer(e.BodyExpr, env)
 }
