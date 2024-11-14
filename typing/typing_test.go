@@ -91,6 +91,68 @@ func TestInfer(t *testing.T) {
 			input: "let x = 2 in let y = 3 in x + y",
 			want:  &TyInt{},
 		},
+		{
+			name:  "fun abstraction",
+			input: "fun y -> y + 3",
+			want: &TyFun{
+				Abs: &TyInt{},
+				App: &TyInt{},
+			},
+		},
+		{
+			name:  "fun application-1",
+			input: "(fun x -> x + 3 ) 2",
+			want:  &TyInt{},
+		},
+		{
+			name:  "fun application-2",
+			input: "(fun param -> param + 3 ) 2",
+			want:  &TyInt{},
+		},
+		{
+			name:  "nested function application-1",
+			input: "(fun x -> (fun y -> x + y)) 2",
+			want: &TyFun{
+				Abs: &TyInt{},
+				App: &TyInt{},
+			},
+		},
+		{
+			name:  "nested function application-2",
+			input: "(fun x -> (fun y -> x + y)) 2 3",
+			want:  &TyInt{},
+		},
+		{
+			name:  "fun abstraction",
+			input: "fun y -> y + 3",
+			want: &TyFun{
+				Abs: &TyInt{},
+				App: &TyInt{},
+			},
+		},
+		{
+			name:  "fun application-1",
+			input: "(fun x -> x + 3 ) 2",
+			want:  &TyInt{},
+		},
+		{
+			name:  "fun application-2",
+			input: "(fun param -> param + 3 ) 2",
+			want:  &TyInt{},
+		},
+		{
+			name:  "nested function application-1",
+			input: "(fun x -> (fun y -> x + y)) 2",
+			want: &TyFun{
+				Abs: &TyInt{},
+				App: &TyInt{},
+			},
+		},
+		{
+			name:  "nested function application-2",
+			input: "(fun x -> (fun y -> x + y)) 2 3",
+			want:  &TyInt{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -105,7 +167,7 @@ func TestInfer(t *testing.T) {
 			t.Parallel()
 
 			p := parser.Parse(tc.input)
-			got := Infer(p, env)
+			_, got := Infer(p, env)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("Infer(%q) returned unexpected difference (-want +got):\n%s", tc.input, diff)

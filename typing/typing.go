@@ -6,7 +6,8 @@ import (
 	"log"
 )
 
-func Infer(node ast.Node, env *Environment) Type {
+// Infer receives term and type environment, returns substitution and type
+func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 	switch n := node.(type) {
 	case *ast.DeclStmt:
 		return Infer(n.Decl, env)
@@ -14,10 +15,12 @@ func Infer(node ast.Node, env *Environment) Type {
 		return Infer(n.Expr, env)
 	case *ast.LetDecl:
 		return inferLetDecl(*n, env)
+	// case *ast.RecDecl:
+	// 	return inferRecDecl(*n, env)
 	case *ast.Integer:
-		return &TyInt{}
+		return Substitution{}, &TyInt{}
 	case *ast.Boolean:
-		return &TyBool{}
+		return Substitution{}, &TyBool{}
 	case *ast.Identifier:
 		return inferIdentifier(*n, env)
 	case *ast.BinOpExpr:
@@ -26,71 +29,162 @@ func Infer(node ast.Node, env *Environment) Type {
 		return inferIfExpr(*n, env)
 	case *ast.LetExpr:
 		return inferLetExpr(*n, env)
+	case *ast.FunExpr:
+		return inferFunExpr(*n, env)
+	case *ast.AppExpr:
+		return inferAppExpr(*n, env)
 	default:
 		log.Fatalf("unexpected node type: %T", n)
 	}
 
-	return nil
+	return nil, nil
 }
 
-func inferLetDecl(d ast.LetDecl, env *Environment) Type {
-	v := Infer(d.Expr, env)
-	env.Set(d.Id, v)
-	return v
+func inferLetDecl(d ast.LetDecl, env *Environment) (Substitution, Type) {
+	_, t := Infer(d.Expr, env)
+	env.Set(d.Id, t)
+	return Substitution{}, t
 }
 
-func inferIdentifier(i ast.Identifier, env *Environment) Type {
+// func inferRecDecl(d ast.RecDecl, env *Environment) (Substitution, Type) {
+// 	return nil, nil
+// }
+
+func inferIdentifier(i ast.Identifier, env *Environment) (Substitution, Type) {
 	t, ok := env.Get(i)
 	if !ok {
 		log.Fatalf("variable %q is not bound", i.Value)
 	}
-	return t
+	return Substitution{}, t
 }
 
-// While the binary operator operands are not strictly required to be integers,
-// this program expects both operands to be integers.
-func inferBinOpExpr(e ast.BinOpExpr, env *Environment) Type {
-	_, ok := Infer(e.Left, env).(*TyInt)
-	if !ok {
-		log.Fatalf("left operand type is not TyInt")
-	}
+func inferBinOpExpr(e ast.BinOpExpr, env *Environment) (Substitution, Type) {
+	ls, lt := Infer(e.Left, env)
+	rs, rt := Infer(e.Right, env)
 
-	_, ok = Infer(e.Right, env).(*TyInt)
-	if !ok {
-		log.Fatalf("right operand type is not TyInt")
-	}
+	c, t := inferPrimitive(e.Op, lt, rt)
 
-	switch e.Op {
+	newCS := Union(ls.ConvertTo(), rs.ConvertTo(), c)
+
+	s := newCS.Unify()
+
+	return s, s.Substitute(t)
+}
+
+// inferPrimitive receives token.Type and two Type, returns ConstraintSet and Type
+func inferPrimitive(op token.Type, left Type, right Type) (ConstraintSet, Type) {
+	switch op {
 	case token.PLUS:
-		return &TyInt{}
+		c := ConstraintSet{
+			{
+				Left:  left,
+				Right: &TyInt{},
+			},
+			{
+				Left:  right,
+				Right: &TyInt{},
+			},
+		}
+		return c, &TyInt{}
 	case token.ASTERISK:
-		return &TyInt{}
+		c := ConstraintSet{
+			{
+				Left:  left,
+				Right: &TyInt{},
+			},
+			{
+				Left:  right,
+				Right: &TyInt{},
+			},
+		}
+		return c, &TyInt{}
 	case token.LT:
-		return &TyBool{}
+		c := ConstraintSet{
+			{
+				Left:  left,
+				Right: &TyInt{},
+			},
+			{
+				Left:  right,
+				Right: &TyInt{},
+			},
+		}
+
+		return c, &TyBool{}
 	default:
-		log.Fatalf("%s is not supported operator", e.Op)
+		log.Fatalf("%s is not supported operator type", op)
 	}
 
-	return nil
+	return nil, nil
 }
 
-func inferIfExpr(e ast.IfExpr, env *Environment) Type {
-	_, ok := Infer(e.Condition, env).(*TyBool)
-	if !ok {
-		log.Fatalf("condition is not Boolean")
+func inferIfExpr(e ast.IfExpr, env *Environment) (Substitution, Type) {
+	s1, t1 := Infer(e.Condition, env)
+	s2, t2 := Infer(e.Consequence, env)
+	s3, t3 := Infer(e.Alternative, env)
+
+	cs1 := ConstraintSet{
+		{
+			Left:  t1,
+			Right: &TyBool{},
+		},
 	}
 
-	cons := Infer(e.Consequence, env)
-	alt := Infer(e.Alternative, env)
-
-	if cons == alt {
-		return cons
+	cs2 := ConstraintSet{
+		{
+			Left:  t2,
+			Right: t3,
+		},
 	}
-	return alt
+
+	newCS := Union(s1.ConvertTo(), s2.ConvertTo(), s3.ConvertTo(), cs1, cs2)
+
+	s := newCS.Unify()
+
+	return s, s.Substitute(t2)
 }
 
-func inferLetExpr(e ast.LetExpr, env *Environment) Type {
-	t := Infer(e.BindingExpr, env)
-	env.Set(e.Id, t)
-	return Infer(e.BodyExpr, env)
+func inferLetExpr(e ast.LetExpr, env *Environment) (Substitution, Type) {
+	s1, t1 := Infer(e.BindingExpr, env)
+	env.Set(e.Id, t1)
+	s2, t2 := Infer(e.BodyExpr, env)
+
+	newCS := Union(s1.ConvertTo(), s2.ConvertTo())
+
+	s := newCS.Unify()
+
+	return s, s.Substitute(t2)
+}
+
+func inferFunExpr(e ast.FunExpr, env *Environment) (Substitution, Type) {
+	freshVar := Fresh()
+	freshIdent := &TyIdent{Variable: freshVar}
+	env.Set(e.Param, freshIdent)
+
+	s, t := Infer(e.BodyExpr, env)
+
+	return s, &TyFun{Abs: s.Substitute(freshIdent), App: t}
+}
+
+func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
+	s1, t1 := Infer(e.Function, env)
+	s2, t2 := Infer(e.Argument, env)
+
+	freshVar := Fresh()
+	freshIdent := &TyIdent{Variable: freshVar}
+
+	cs1 := ConstraintSet{
+		{
+			Left: t1,
+			Right: &TyFun{
+				Abs: t2,
+				App: freshIdent,
+			},
+		},
+	}
+	newCS := Union(s1.ConvertTo(), s2.ConvertTo(), cs1)
+
+	s := newCS.Unify()
+
+	return s, s.Substitute(freshIdent)
 }
