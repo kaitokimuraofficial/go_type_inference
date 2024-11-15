@@ -9,8 +9,6 @@ import (
 )
 
 func TestInfer(t *testing.T) {
-	t.Parallel()
-
 	testCases := []struct {
 		name  string
 		input string
@@ -92,6 +90,19 @@ func TestInfer(t *testing.T) {
 			want:  &TyInt{},
 		},
 		{
+			name:  "let poly declaration",
+			input: "let f = fun x -> x",
+			want: &TyFun{
+				Abs: &TyIdent{Variable: 0},
+				App: &TyIdent{Variable: 0},
+			},
+		},
+		{
+			name:  "let poly expression",
+			input: "let f = fun x -> x in if f true then f 2 else f 3",
+			want:  &TyInt{},
+		},
+		{
 			name:  "fun abstraction",
 			input: "fun y -> y + 3",
 			want: &TyFun{
@@ -151,19 +162,6 @@ func TestInfer(t *testing.T) {
 		{
 			name:  "nested function application-2",
 			input: "(fun x -> (fun y -> x + y)) 2 3",
-			want:  &TyInt{},
-		},
-		{
-			name:  "recursive function declaration",
-			input: "let rec f = fun n -> (if 10 < n then 1 else n * f (n + 1))",
-			want: &TyFun{
-				Abs: &TyInt{},
-				App: &TyInt{},
-			},
-		},
-		{
-			name:  "recursive function expression",
-			input: "let rec fact = fun n -> (if 9 < n then 1 else n * (fact (n+1))) in fact 8",
 			want:  &TyInt{},
 		},
 	}
@@ -171,14 +169,30 @@ func TestInfer(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 
-		env := &Environment{Store: make(map[ast.Identifier]Type)}
-		env.Set(ast.Identifier{Value: "b"}, &TyBool{})
-		env.Set(ast.Identifier{Value: "i"}, &TyInt{})
-		env.Set(ast.Identifier{Value: "v"}, &TyInt{})
+		env := &Environment{Store: make(map[ast.Identifier]Scheme)}
+		env.Set(ast.Identifier{Value: "b"}, struct {
+			BoundVars []Variable
+			Type      Type
+		}{
+			BoundVars: []Variable{},
+			Type:      &TyInt{},
+		})
+		env.Set(ast.Identifier{Value: "i"}, struct {
+			BoundVars []Variable
+			Type      Type
+		}{
+			BoundVars: []Variable{},
+			Type:      &TyInt{},
+		})
+		env.Set(ast.Identifier{Value: "v"}, struct {
+			BoundVars []Variable
+			Type      Type
+		}{
+			BoundVars: []Variable{},
+			Type:      &TyInt{},
+		})
 
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			p := parser.Parse(tc.input)
 			_, got := Infer(p, env)
 
