@@ -157,8 +157,7 @@ func inferLetExpr(e ast.LetExpr, env *Environment) (Substitution, Type) {
 }
 
 func inferFunExpr(e ast.FunExpr, env *Environment) (Substitution, Type) {
-	freshVar := Fresh()
-	freshIdent := &TyIdent{Variable: freshVar}
+	freshIdent := NewFreshTyIdent()
 	env.Set(e.Param, freshIdent)
 
 	s, t := Infer(e.BodyExpr, env)
@@ -170,8 +169,7 @@ func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
 	s1, t1 := Infer(e.Function, env)
 	s2, t2 := Infer(e.Argument, env)
 
-	freshVar := Fresh()
-	freshIdent := &TyIdent{Variable: freshVar}
+	freshIdent := NewFreshTyIdent()
 
 	cs1 := ConstraintSet{
 		{
