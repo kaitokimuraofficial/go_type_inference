@@ -14,7 +14,7 @@ var (
 	counterLock sync.Mutex
 )
 
-func Fresh() Variable {
+func fresh() Variable {
 	counterLock.Lock()
 	defer counterLock.Unlock()
 
@@ -70,6 +70,10 @@ type (
 		Variable Variable
 	}
 )
+
+func NewFreshTyIdent() *TyIdent {
+	return &TyIdent{Variable: fresh()}
+}
 
 func (t *TyInt) Convert(TyIdent, Type) Type {
 	return t
