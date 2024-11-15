@@ -38,6 +38,25 @@ func union(vars1, vars2 []Variable) []Variable {
 	return keys
 }
 
+// difference returns the set of all things that belong to vars1 but not vars2.
+func difference(vars1, vars2 []Variable) []Variable {
+	m := make(map[Variable]bool)
+	for _, v := range vars1 {
+		m[v] = true
+	}
+
+	for _, v := range vars2 {
+		m[v] = false
+	}
+
+	keys := make([]Variable, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
 // ContainsIn checks if a given list of Variable contains a specific Variable
 func ContainsIn(vars []Variable, target Variable) bool {
 	for _, v := range vars {
