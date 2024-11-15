@@ -153,6 +153,19 @@ func TestInfer(t *testing.T) {
 			input: "(fun x -> (fun y -> x + y)) 2 3",
 			want:  &TyInt{},
 		},
+		{
+			name:  "recursive function declaration",
+			input: "let rec f = fun n -> (if 10 < n then 1 else n * f (n + 1))",
+			want: &TyFun{
+				Abs: &TyInt{},
+				App: &TyInt{},
+			},
+		},
+		{
+			name:  "recursive function expression",
+			input: "let rec fact = fun n -> (if 9 < n then 1 else n * (fact (n+1))) in fact 8",
+			want:  &TyInt{},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -15,8 +15,8 @@ func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 		return Infer(n.Expr, env)
 	case *ast.LetDecl:
 		return inferLetDecl(*n, env)
-	// case *ast.RecDecl:
-	// 	return inferRecDecl(*n, env)
+	case *ast.RecDecl:
+		return inferRecDecl(*n, env)
 	case *ast.Integer:
 		return Substitution{}, &TyInt{}
 	case *ast.Boolean:
@@ -33,6 +33,8 @@ func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 		return inferFunExpr(*n, env)
 	case *ast.AppExpr:
 		return inferAppExpr(*n, env)
+	case *ast.LetRecExpr:
+		return inferLetRecExpr(*n, env)
 	default:
 		log.Fatalf("unexpected node type: %T", n)
 	}
@@ -46,9 +48,26 @@ func inferLetDecl(d ast.LetDecl, env *Environment) (Substitution, Type) {
 	return Substitution{}, t
 }
 
-// func inferRecDecl(d ast.RecDecl, env *Environment) (Substitution, Type) {
-// 	return nil, nil
-// }
+func inferRecDecl(d ast.RecDecl, env *Environment) (Substitution, Type) {
+	paramTy := NewFreshTyIdent()
+	retTy := NewFreshTyIdent()
+
+	env.Set(d.Id, &TyFun{Abs: paramTy, App: retTy})
+	env.Set(d.Param, paramTy)
+
+	subst, typ := Infer(d.BodyExpr, env)
+	cs := ConstraintSet{
+		{
+			Left:  retTy,
+			Right: typ,
+		},
+	}
+
+	newCS := Union(subst.ConvertTo(), cs)
+	s := newCS.Unify()
+
+	return s, s.Substitute(&TyFun{Abs: paramTy, App: typ})
+}
 
 func inferIdentifier(i ast.Identifier, env *Environment) (Substitution, Type) {
 	t, ok := env.Get(i)
@@ -171,7 +190,7 @@ func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
 
 	freshIdent := NewFreshTyIdent()
 
-	cs1 := ConstraintSet{
+	cs := ConstraintSet{
 		{
 			Left: t1,
 			Right: &TyFun{
@@ -180,9 +199,37 @@ func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
 			},
 		},
 	}
-	newCS := Union(s1.ConvertTo(), s2.ConvertTo(), cs1)
+	newCS := Union(s1.ConvertTo(), s2.ConvertTo(), cs)
 
 	s := newCS.Unify()
 
 	return s, s.Substitute(freshIdent)
+}
+
+func inferLetRecExpr(e ast.LetRecExpr, env *Environment) (Substitution, Type) {
+	paramTy := NewFreshTyIdent()
+	retTy := NewFreshTyIdent()
+
+	env1 := *env
+	env1.Set(e.Id, &TyFun{Abs: paramTy, App: retTy})
+	env1.Set(e.Param, paramTy)
+
+	bindingSub, bindingTyp := Infer(e.BindingExpr, &env1)
+
+	cs := ConstraintSet{
+		{
+			Left:  retTy,
+			Right: bindingTyp,
+		},
+	}
+
+	env2 := *env
+	env2.Set(e.Id, &TyFun{Abs: paramTy, App: retTy})
+
+	bodySub, bodyTyp := Infer(e.BodyExpr, &env2)
+
+	newCS := Union(bindingSub.ConvertTo(), bodySub.ConvertTo(), cs)
+	s := newCS.Unify()
+
+	return s, s.Substitute(bodyTyp)
 }
