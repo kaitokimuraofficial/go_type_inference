@@ -10,13 +10,13 @@ func TestUnify(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name    string
-		handler ConstraintSet
-		want    Substitution
+		name  string
+		input []Constraint
+		want  []Substitution
 	}{
 		{
 			name: "x↦Bool y↦(x→Int)",
-			handler: ConstraintSet{
+			input: []Constraint{
 				{
 					Left:  &TyIdent{Variable: 1},
 					Right: &TyBool{},
@@ -29,7 +29,7 @@ func TestUnify(t *testing.T) {
 					},
 				},
 			},
-			want: Substitution{
+			want: []Substitution{
 				{
 					Variable: 2,
 					Type: &TyFun{
@@ -45,7 +45,7 @@ func TestUnify(t *testing.T) {
 		},
 		{
 			name: "y↦(x→Int), x↦Bool (reversed from the previous case)",
-			handler: ConstraintSet{
+			input: []Constraint{
 				{
 					Left: &TyIdent{Variable: 2},
 					Right: &TyFun{
@@ -58,7 +58,7 @@ func TestUnify(t *testing.T) {
 					Right: &TyBool{},
 				},
 			},
-			want: Substitution{
+			want: []Substitution{
 				{
 					Variable: 1,
 					Type:     &TyBool{},
@@ -80,7 +80,7 @@ func TestUnify(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := tc.handler.Unify()
+			got := Unify(tc.input)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("returned unexpected difference (-want +got):\n%s", diff)

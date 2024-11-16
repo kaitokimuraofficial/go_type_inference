@@ -8,7 +8,7 @@ import (
 )
 
 // Infer receives term and type environment, returns substitution and type
-func Infer(node ast.Node, env *Environment) (Substitution, Type) {
+func Infer(node ast.Node, env *Environment) ([]Substitution, Type) {
 	switch n := node.(type) {
 	case *ast.DeclStmt:
 		return Infer(n.Decl, env)
@@ -17,9 +17,9 @@ func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 	case *ast.LetDecl:
 		return inferLetDecl(*n, env)
 	case *ast.Integer:
-		return Substitution{}, &TyInt{}
+		return []Substitution{}, &TyInt{}
 	case *ast.Boolean:
-		return Substitution{}, &TyBool{}
+		return []Substitution{}, &TyBool{}
 	case *ast.Identifier:
 		return inferIdentifier(*n, env)
 	case *ast.BinOpExpr:
@@ -39,12 +39,12 @@ func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 	return nil, nil
 }
 
-func inferLetDecl(d ast.LetDecl, env *Environment) (Substitution, Type) {
+func inferLetDecl(d ast.LetDecl, env *Environment) ([]Substitution, Type) {
 	s, t := Infer(d.Expr, env)
-	cs := s.ConvertTo()
-	subst := cs.Unify()
+	cs := ConvertTo(s)
+	subst := Unify(cs)
 
-	typ := subst.Substitute(t)
+	typ := Substitute(subst, t)
 	sch := NewScheme(typ)
 	for _, v := range typ.Variables() {
 		vs := strconv.Itoa(int(v))
@@ -54,16 +54,16 @@ func inferLetDecl(d ast.LetDecl, env *Environment) (Substitution, Type) {
 	}
 
 	env.Set(d.Id, *sch)
-	return Substitution{}, sch.Type
+	return []Substitution{}, sch.Type
 }
 
-func inferIdentifier(i ast.Identifier, env *Environment) (Substitution, Type) {
+func inferIdentifier(i ast.Identifier, env *Environment) ([]Substitution, Type) {
 	sch, ok := env.Get(i)
 	if !ok {
 		log.Fatalf("variable %q is not bound", i.Value)
 	}
 
-	subst := Substitution{}
+	subst := []Substitution{}
 	for _, boundVar := range sch.BoundVars {
 		subst = append(subst, struct {
 			Variable Variable
@@ -74,27 +74,27 @@ func inferIdentifier(i ast.Identifier, env *Environment) (Substitution, Type) {
 		})
 	}
 
-	return Substitution{}, subst.Substitute(sch.Type)
+	return []Substitution{}, Substitute(subst, sch.Type)
 }
 
-func inferBinOpExpr(e ast.BinOpExpr, env *Environment) (Substitution, Type) {
+func inferBinOpExpr(e ast.BinOpExpr, env *Environment) ([]Substitution, Type) {
 	ls, lt := Infer(e.Left, env)
 	rs, rt := Infer(e.Right, env)
 
 	c, t := inferPrimitive(e.Op, lt, rt)
 
-	newCS := Union(ls.ConvertTo(), rs.ConvertTo(), c)
+	newCS := Union(ConvertTo(ls), ConvertTo(rs), c)
 
-	s := newCS.Unify()
+	s := Unify(newCS)
 
-	return s, s.Substitute(t)
+	return s, Substitute(s, t)
 }
 
-// inferPrimitive receives token.Type and two Type, returns ConstraintSet and Type
-func inferPrimitive(op token.Type, left Type, right Type) (ConstraintSet, Type) {
+// inferPrimitive receives token.Type and two Type, returns Constraints and Type
+func inferPrimitive(op token.Type, left Type, right Type) ([]Constraint, Type) {
 	switch op {
 	case token.PLUS:
-		c := ConstraintSet{
+		c := []Constraint{
 			{
 				Left:  left,
 				Right: &TyInt{},
@@ -106,7 +106,7 @@ func inferPrimitive(op token.Type, left Type, right Type) (ConstraintSet, Type) 
 		}
 		return c, &TyInt{}
 	case token.ASTERISK:
-		c := ConstraintSet{
+		c := []Constraint{
 			{
 				Left:  left,
 				Right: &TyInt{},
@@ -118,7 +118,7 @@ func inferPrimitive(op token.Type, left Type, right Type) (ConstraintSet, Type) 
 		}
 		return c, &TyInt{}
 	case token.LT:
-		c := ConstraintSet{
+		c := []Constraint{
 			{
 				Left:  left,
 				Right: &TyInt{},
@@ -137,38 +137,38 @@ func inferPrimitive(op token.Type, left Type, right Type) (ConstraintSet, Type) 
 	return nil, nil
 }
 
-func inferIfExpr(e ast.IfExpr, env *Environment) (Substitution, Type) {
+func inferIfExpr(e ast.IfExpr, env *Environment) ([]Substitution, Type) {
 	s1, t1 := Infer(e.Condition, env)
 	s2, t2 := Infer(e.Consequence, env)
 	s3, t3 := Infer(e.Alternative, env)
 
-	cs1 := ConstraintSet{
+	cs1 := []Constraint{
 		{
 			Left:  t1,
 			Right: &TyBool{},
 		},
 	}
 
-	cs2 := ConstraintSet{
+	cs2 := []Constraint{
 		{
 			Left:  t2,
 			Right: t3,
 		},
 	}
 
-	newCS := Union(s1.ConvertTo(), s2.ConvertTo(), s3.ConvertTo(), cs1, cs2)
+	newCS := Union(ConvertTo(s1), ConvertTo(s2), ConvertTo(s3), cs1, cs2)
 
-	s := newCS.Unify()
+	s := Unify(newCS)
 
-	return s, s.Substitute(t2)
+	return s, Substitute(s, t2)
 }
 
-func inferLetExpr(e ast.LetExpr, env *Environment) (Substitution, Type) {
+func inferLetExpr(e ast.LetExpr, env *Environment) ([]Substitution, Type) {
 	s1, t1 := Infer(e.BindingExpr, env)
-	cs := s1.ConvertTo()
-	subst := cs.Unify()
+	cs := ConvertTo(s1)
+	subst := Unify(cs)
 
-	bindingTyp := subst.Substitute(t1)
+	bindingTyp := Substitute(subst, t1)
 	sch := NewScheme(bindingTyp)
 	for _, v := range bindingTyp.Variables() {
 		vs := strconv.Itoa(int(v))
@@ -180,29 +180,29 @@ func inferLetExpr(e ast.LetExpr, env *Environment) (Substitution, Type) {
 	env.Set(e.Id, *sch)
 	s2, t2 := Infer(e.BodyExpr, env)
 
-	newCS := Union(s1.ConvertTo(), s2.ConvertTo())
+	newCS := Union(ConvertTo(s1), ConvertTo(s2))
 
-	s := newCS.Unify()
+	s := Unify(newCS)
 
-	return s, s.Substitute(t2)
+	return s, Substitute(s, t2)
 }
 
-func inferFunExpr(e ast.FunExpr, env *Environment) (Substitution, Type) {
+func inferFunExpr(e ast.FunExpr, env *Environment) ([]Substitution, Type) {
 	freshIdent := NewFreshTyIdent()
 	env.Set(e.Param, *NewScheme(freshIdent))
 
 	s, t := Infer(e.BodyExpr, env)
 
-	return s, &TyFun{Abs: s.Substitute(freshIdent), App: t}
+	return s, &TyFun{Abs: Substitute(s, freshIdent), App: t}
 }
 
-func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
+func inferAppExpr(e ast.AppExpr, env *Environment) ([]Substitution, Type) {
 	s1, t1 := Infer(e.Function, env)
 	s2, t2 := Infer(e.Argument, env)
 
 	freshIdent := NewFreshTyIdent()
 
-	cs := ConstraintSet{
+	cs := []Constraint{
 		{
 			Left: t1,
 			Right: &TyFun{
@@ -211,9 +211,9 @@ func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
 			},
 		},
 	}
-	newCS := Union(s1.ConvertTo(), s2.ConvertTo(), cs)
+	newCS := Union(ConvertTo(s1), ConvertTo(s2), cs)
 
-	s := newCS.Unify()
+	s := Unify(newCS)
 
-	return s, s.Substitute(freshIdent)
+	return s, Substitute(s, freshIdent)
 }
