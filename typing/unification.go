@@ -3,21 +3,21 @@ package typing
 import "log"
 
 // ----------------------------------------------------------------------------
-// ConstraintSet
+// Constraint
 
-// ConstraintSet represents a set of constraints that the type must satisfy.
-type ConstraintSet []struct {
+// Constraint represents a set of constraints that the type must satisfy.
+type Constraint struct {
 	Left  Type
 	Right Type
 }
 
-func (cs ConstraintSet) Unify() Substitution {
+func Unify(cs []Constraint) Substitution {
 	for i, c := range cs {
 		left, right := c.Left, c.Right
 
 		if left == right {
 			newCS := append(cs[:i], cs[i+1:]...)
-			return newCS.Unify()
+			return Unify(newCS)
 		}
 
 		lf, lok := left.(*TyFun)
@@ -25,29 +25,18 @@ func (cs ConstraintSet) Unify() Substitution {
 		if lok && rok {
 			newCS := append(cs[:i], cs[i+1:]...)
 			newCS = append(newCS,
-				struct {
-					Left  Type
-					Right Type
-				}{
-					Left:  lf.Abs,
-					Right: rf.Abs,
-				},
-				struct {
-					Left  Type
-					Right Type
-				}{
-					Left:  lf.App,
-					Right: rf.App,
-				})
-			return newCS.Unify()
+				Constraint{Left: lf.Abs, Right: rf.Abs},
+				Constraint{Left: lf.App, Right: rf.App},
+			)
+			return Unify(newCS)
 		}
 
 		li, lok := left.(*TyIdent)
 		if lok && !ContainsIn(right.Variables(), li.Variable) {
 			newCS := append(cs[:i], cs[i+1:]...)
-			replacedConstSet := newCS.replace(*li, right)
-			res := replacedConstSet.Unify()
-			return append(res, struct {
+			replaced := replace(newCS, *li, right)
+			substitution := Unify(replaced)
+			return append(substitution, struct {
 				Variable Variable
 				Type     Type
 			}{
@@ -59,9 +48,9 @@ func (cs ConstraintSet) Unify() Substitution {
 		ri, rok := right.(*TyIdent)
 		if rok && !ContainsIn(left.Variables(), ri.Variable) {
 			newCS := append(cs[:i], cs[i+1:]...)
-			replacedConstSet := newCS.replace(*ri, left)
-			res := replacedConstSet.Unify()
-			return append(res, struct {
+			replaced := replace(newCS, *ri, left)
+			substitution := Unify(replaced)
+			return append(substitution, struct {
 				Variable Variable
 				Type     Type
 			}{
@@ -73,43 +62,34 @@ func (cs ConstraintSet) Unify() Substitution {
 	return nil
 }
 
-// Union combines two slices of ConstraintSets into a single slice with no duplicates.
-func Union(css ...ConstraintSet) ConstraintSet {
-	m := make(map[struct {
-		Left  Type
-		Right Type
-	}]bool)
-	for _, cs := range css {
-		for _, v := range cs {
-			m[v] = true
+// Union combines two slices of Constraints into a single slice with no duplicates.
+func Union(lists ...[]Constraint) []Constraint {
+	m := make(map[Constraint]bool)
+	for _, list := range lists {
+		for _, c := range list {
+			m[c] = true
 		}
 	}
 
-	keys := make([]struct {
-		Left  Type
-		Right Type
-	}, 0, len(m))
+	combined := []Constraint{}
 	for k := range m {
-		keys = append(keys, k)
+		combined = append(combined, k)
 	}
 
-	return keys
+	return combined
 }
 
-// replace replaces all occurrences of the 'frm' TyIdent in the ConstraintSet to the 'to' type.
-func (cs ConstraintSet) replace(frm TyIdent, to Type) ConstraintSet {
-	newConstSet := make(ConstraintSet, len(cs))
+// replace replaces all occurrences of the 'frm' TyIdent in the Constraints to the 'to' type.
+func replace(cs []Constraint, frm TyIdent, to Type) []Constraint {
+	replaced := []Constraint{}
 
-	for i, pair := range cs {
-		newConstSet[i] = struct {
-			Left  Type
-			Right Type
-		}{
-			Left:  pair.Left.Convert(frm, to),
-			Right: pair.Right.Convert(frm, to),
-		}
+	for _, c := range cs {
+		replaced = append(replaced, Constraint{
+			Left:  c.Left.Convert(frm, to),
+			Right: c.Right.Convert(frm, to),
+		})
 	}
-	return newConstSet
+	return replaced
 }
 
 // ----------------------------------------------------------------------------
@@ -121,14 +101,11 @@ type Substitution []struct {
 	Type     Type
 }
 
-func (s *Substitution) ConvertTo() ConstraintSet {
-	cs := ConstraintSet{}
+func (s *Substitution) ConvertTo() []Constraint {
+	cs := []Constraint{}
 
 	for _, subst := range *s {
-		tmp := struct {
-			Left  Type
-			Right Type
-		}{
+		tmp := Constraint{
 			Left:  &TyIdent{Variable: subst.Variable},
 			Right: subst.Type,
 		}

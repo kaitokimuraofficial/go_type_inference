@@ -42,7 +42,7 @@ func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 func inferLetDecl(d ast.LetDecl, env *Environment) (Substitution, Type) {
 	s, t := Infer(d.Expr, env)
 	cs := s.ConvertTo()
-	subst := cs.Unify()
+	subst := Unify(cs)
 
 	typ := subst.Substitute(t)
 	sch := NewScheme(typ)
@@ -85,16 +85,16 @@ func inferBinOpExpr(e ast.BinOpExpr, env *Environment) (Substitution, Type) {
 
 	newCS := Union(ls.ConvertTo(), rs.ConvertTo(), c)
 
-	s := newCS.Unify()
+	s := Unify(newCS)
 
 	return s, s.Substitute(t)
 }
 
-// inferPrimitive receives token.Type and two Type, returns ConstraintSet and Type
-func inferPrimitive(op token.Type, left Type, right Type) (ConstraintSet, Type) {
+// inferPrimitive receives token.Type and two Type, returns Constraints and Type
+func inferPrimitive(op token.Type, left Type, right Type) ([]Constraint, Type) {
 	switch op {
 	case token.PLUS:
-		c := ConstraintSet{
+		c := []Constraint{
 			{
 				Left:  left,
 				Right: &TyInt{},
@@ -106,7 +106,7 @@ func inferPrimitive(op token.Type, left Type, right Type) (ConstraintSet, Type) 
 		}
 		return c, &TyInt{}
 	case token.ASTERISK:
-		c := ConstraintSet{
+		c := []Constraint{
 			{
 				Left:  left,
 				Right: &TyInt{},
@@ -118,7 +118,7 @@ func inferPrimitive(op token.Type, left Type, right Type) (ConstraintSet, Type) 
 		}
 		return c, &TyInt{}
 	case token.LT:
-		c := ConstraintSet{
+		c := []Constraint{
 			{
 				Left:  left,
 				Right: &TyInt{},
@@ -142,14 +142,14 @@ func inferIfExpr(e ast.IfExpr, env *Environment) (Substitution, Type) {
 	s2, t2 := Infer(e.Consequence, env)
 	s3, t3 := Infer(e.Alternative, env)
 
-	cs1 := ConstraintSet{
+	cs1 := []Constraint{
 		{
 			Left:  t1,
 			Right: &TyBool{},
 		},
 	}
 
-	cs2 := ConstraintSet{
+	cs2 := []Constraint{
 		{
 			Left:  t2,
 			Right: t3,
@@ -158,7 +158,7 @@ func inferIfExpr(e ast.IfExpr, env *Environment) (Substitution, Type) {
 
 	newCS := Union(s1.ConvertTo(), s2.ConvertTo(), s3.ConvertTo(), cs1, cs2)
 
-	s := newCS.Unify()
+	s := Unify(newCS)
 
 	return s, s.Substitute(t2)
 }
@@ -166,7 +166,7 @@ func inferIfExpr(e ast.IfExpr, env *Environment) (Substitution, Type) {
 func inferLetExpr(e ast.LetExpr, env *Environment) (Substitution, Type) {
 	s1, t1 := Infer(e.BindingExpr, env)
 	cs := s1.ConvertTo()
-	subst := cs.Unify()
+	subst := Unify(cs)
 
 	bindingTyp := subst.Substitute(t1)
 	sch := NewScheme(bindingTyp)
@@ -182,7 +182,7 @@ func inferLetExpr(e ast.LetExpr, env *Environment) (Substitution, Type) {
 
 	newCS := Union(s1.ConvertTo(), s2.ConvertTo())
 
-	s := newCS.Unify()
+	s := Unify(newCS)
 
 	return s, s.Substitute(t2)
 }
@@ -202,7 +202,7 @@ func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
 
 	freshIdent := NewFreshTyIdent()
 
-	cs := ConstraintSet{
+	cs := []Constraint{
 		{
 			Left: t1,
 			Right: &TyFun{
@@ -213,7 +213,7 @@ func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
 	}
 	newCS := Union(s1.ConvertTo(), s2.ConvertTo(), cs)
 
-	s := newCS.Unify()
+	s := Unify(newCS)
 
 	return s, s.Substitute(freshIdent)
 }
