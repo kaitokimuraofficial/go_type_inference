@@ -4,6 +4,7 @@ import (
 	"go_type_inference/ast"
 	"go_type_inference/token"
 	"log"
+	"strconv"
 )
 
 // Infer receives term and type environment, returns substitution and type
@@ -15,8 +16,6 @@ func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 		return Infer(n.Expr, env)
 	case *ast.LetDecl:
 		return inferLetDecl(*n, env)
-	case *ast.RecDecl:
-		return inferRecDecl(*n, env)
 	case *ast.Integer:
 		return Substitution{}, &TyInt{}
 	case *ast.Boolean:
@@ -33,8 +32,6 @@ func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 		return inferFunExpr(*n, env)
 	case *ast.AppExpr:
 		return inferAppExpr(*n, env)
-	case *ast.LetRecExpr:
-		return inferLetRecExpr(*n, env)
 	default:
 		log.Fatalf("unexpected node type: %T", n)
 	}
@@ -43,38 +40,41 @@ func Infer(node ast.Node, env *Environment) (Substitution, Type) {
 }
 
 func inferLetDecl(d ast.LetDecl, env *Environment) (Substitution, Type) {
-	_, t := Infer(d.Expr, env)
-	env.Set(d.Id, t)
-	return Substitution{}, t
-}
+	s, t := Infer(d.Expr, env)
+	cs := s.ConvertTo()
+	subst := cs.Unify()
 
-func inferRecDecl(d ast.RecDecl, env *Environment) (Substitution, Type) {
-	paramTy := NewFreshTyIdent()
-	retTy := NewFreshTyIdent()
-
-	env.Set(d.Id, &TyFun{Abs: paramTy, App: retTy})
-	env.Set(d.Param, paramTy)
-
-	subst, typ := Infer(d.BodyExpr, env)
-	cs := ConstraintSet{
-		{
-			Left:  retTy,
-			Right: typ,
-		},
+	typ := subst.Substitute(t)
+	sch := NewScheme(typ)
+	for _, v := range typ.Variables() {
+		vs := strconv.Itoa(int(v))
+		if _, ok := env.Get(ast.Identifier{Value: vs}); !ok {
+			sch.BoundVars = append(sch.BoundVars, v)
+		}
 	}
 
-	newCS := Union(subst.ConvertTo(), cs)
-	s := newCS.Unify()
-
-	return s, s.Substitute(&TyFun{Abs: paramTy, App: typ})
+	env.Set(d.Id, *sch)
+	return Substitution{}, sch.Type
 }
 
 func inferIdentifier(i ast.Identifier, env *Environment) (Substitution, Type) {
-	t, ok := env.Get(i)
+	sch, ok := env.Get(i)
 	if !ok {
 		log.Fatalf("variable %q is not bound", i.Value)
 	}
-	return Substitution{}, t
+
+	subst := Substitution{}
+	for _, boundVar := range sch.BoundVars {
+		subst = append(subst, struct {
+			Variable Variable
+			Type     Type
+		}{
+			Variable: boundVar,
+			Type:     NewFreshTyIdent(),
+		})
+	}
+
+	return Substitution{}, subst.Substitute(sch.Type)
 }
 
 func inferBinOpExpr(e ast.BinOpExpr, env *Environment) (Substitution, Type) {
@@ -165,7 +165,19 @@ func inferIfExpr(e ast.IfExpr, env *Environment) (Substitution, Type) {
 
 func inferLetExpr(e ast.LetExpr, env *Environment) (Substitution, Type) {
 	s1, t1 := Infer(e.BindingExpr, env)
-	env.Set(e.Id, t1)
+	cs := s1.ConvertTo()
+	subst := cs.Unify()
+
+	bindingTyp := subst.Substitute(t1)
+	sch := NewScheme(bindingTyp)
+	for _, v := range bindingTyp.Variables() {
+		vs := strconv.Itoa(int(v))
+		if _, ok := env.Get(ast.Identifier{Value: vs}); !ok {
+			sch.BoundVars = append(sch.BoundVars, v)
+		}
+	}
+
+	env.Set(e.Id, *sch)
 	s2, t2 := Infer(e.BodyExpr, env)
 
 	newCS := Union(s1.ConvertTo(), s2.ConvertTo())
@@ -177,7 +189,7 @@ func inferLetExpr(e ast.LetExpr, env *Environment) (Substitution, Type) {
 
 func inferFunExpr(e ast.FunExpr, env *Environment) (Substitution, Type) {
 	freshIdent := NewFreshTyIdent()
-	env.Set(e.Param, freshIdent)
+	env.Set(e.Param, *NewScheme(freshIdent))
 
 	s, t := Infer(e.BodyExpr, env)
 
@@ -204,32 +216,4 @@ func inferAppExpr(e ast.AppExpr, env *Environment) (Substitution, Type) {
 	s := newCS.Unify()
 
 	return s, s.Substitute(freshIdent)
-}
-
-func inferLetRecExpr(e ast.LetRecExpr, env *Environment) (Substitution, Type) {
-	paramTy := NewFreshTyIdent()
-	retTy := NewFreshTyIdent()
-
-	env1 := *env
-	env1.Set(e.Id, &TyFun{Abs: paramTy, App: retTy})
-	env1.Set(e.Param, paramTy)
-
-	bindingSub, bindingTyp := Infer(e.BindingExpr, &env1)
-
-	cs := ConstraintSet{
-		{
-			Left:  retTy,
-			Right: bindingTyp,
-		},
-	}
-
-	env2 := *env
-	env2.Set(e.Id, &TyFun{Abs: paramTy, App: retTy})
-
-	bodySub, bodyTyp := Infer(e.BodyExpr, &env2)
-
-	newCS := Union(bindingSub.ConvertTo(), bodySub.ConvertTo(), cs)
-	s := newCS.Unify()
-
-	return s, s.Substitute(bodyTyp)
 }
