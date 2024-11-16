@@ -11,7 +11,7 @@ type Constraint struct {
 	Right Type
 }
 
-func Unify(cs []Constraint) Substitution {
+func Unify(cs []Constraint) []Substitution {
 	for i, c := range cs {
 		left, right := c.Left, c.Right
 
@@ -96,18 +96,18 @@ func replace(cs []Constraint, frm TyIdent, to Type) []Constraint {
 // Substitution
 
 // Substitution represents the mapping of type variables to their inferred results.
-type Substitution []struct {
+type Substitution struct {
 	Variable Variable
 	Type     Type
 }
 
-func (s *Substitution) ConvertTo() []Constraint {
+func ConvertTo(ss []Substitution) []Constraint {
 	cs := []Constraint{}
 
-	for _, subst := range *s {
+	for _, s := range ss {
 		tmp := Constraint{
-			Left:  &TyIdent{Variable: subst.Variable},
-			Right: subst.Type,
+			Left:  &TyIdent{Variable: s.Variable},
+			Right: s.Type,
 		}
 		cs = append(cs, tmp)
 	}
@@ -115,18 +115,18 @@ func (s *Substitution) ConvertTo() []Constraint {
 	return cs
 }
 
-func (s *Substitution) Substitute(typ Type) Type {
+func Substitute(ss []Substitution, typ Type) Type {
 	switch t := typ.(type) {
 	case *TyInt:
 		return &TyInt{}
 	case *TyBool:
 		return &TyBool{}
 	case *TyFun:
-		return &TyFun{Abs: s.Substitute(t.Abs), App: s.Substitute(t.App)}
+		return &TyFun{Abs: Substitute(ss, t.Abs), App: Substitute(ss, t.App)}
 	case *TyIdent:
-		for _, subst := range *s {
-			if subst.Variable == t.Variable {
-				return subst.Type
+		for _, s := range ss {
+			if s.Variable == t.Variable {
+				return s.Type
 			}
 		}
 		return t

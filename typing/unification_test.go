@@ -12,7 +12,7 @@ func TestUnify(t *testing.T) {
 	testCases := []struct {
 		name  string
 		input []Constraint
-		want  Substitution
+		want  []Substitution
 	}{
 		{
 			name: "x↦Bool y↦(x→Int)",
@@ -29,7 +29,7 @@ func TestUnify(t *testing.T) {
 					},
 				},
 			},
-			want: Substitution{
+			want: []Substitution{
 				{
 					Variable: 2,
 					Type: &TyFun{
@@ -58,7 +58,7 @@ func TestUnify(t *testing.T) {
 					Right: &TyBool{},
 				},
 			},
-			want: Substitution{
+			want: []Substitution{
 				{
 					Variable: 1,
 					Type:     &TyBool{},
