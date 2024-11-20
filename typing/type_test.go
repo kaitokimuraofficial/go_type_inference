@@ -7,55 +7,55 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestConvert(t *testing.T) {
+func TestReplace(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		desc string
-		typ  Type
-		frm  TyIdent
-		to   Type
-		want Type
+		typ  Typ
+		frm  TyVar
+		to   Typ
+		want Typ
 	}{
 		{
 			desc: "TyInt does not change",
 			typ:  &TyInt{},
-			frm:  TyIdent{Variable: 1},
+			frm:  TyVar{Variable: 1},
 			to:   &TyInt{},
 			want: &TyInt{},
 		},
 		{
 			desc: "TyBool does not change",
 			typ:  &TyBool{},
-			frm:  TyIdent{Variable: 1},
+			frm:  TyVar{Variable: 1},
 			to:   &TyInt{},
 			want: &TyBool{},
 		},
 		{
 			desc: "TyIndent converts if it matches",
-			typ:  &TyIdent{Variable: 1},
-			frm:  TyIdent{Variable: 1},
+			typ:  &TyVar{Variable: 1},
+			frm:  TyVar{Variable: 1},
 			to:   &TyInt{},
 			want: &TyInt{},
 		},
 		{
 			desc: "TyIndent does not convert if it does not match",
-			typ:  &TyIdent{Variable: 1},
-			frm:  TyIdent{Variable: 2},
+			typ:  &TyVar{Variable: 1},
+			frm:  TyVar{Variable: 2},
 			to:   &TyInt{},
-			want: &TyIdent{Variable: 1},
+			want: &TyVar{Variable: 1},
 		},
 		{
 			desc: "simple TyFun case",
 			typ: &TyFun{
-				Abs: &TyIdent{
+				Abs: &TyVar{
 					Variable: 1,
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 1,
 				},
 			},
-			frm: TyIdent{Variable: 1},
+			frm: TyVar{Variable: 1},
 			to:  &TyBool{},
 			want: &TyFun{
 				Abs: &TyBool{},
@@ -67,34 +67,34 @@ func TestConvert(t *testing.T) {
 			typ: &TyFun{
 				Abs: &TyFun{
 					Abs: &TyFun{
-						Abs: &TyIdent{
+						Abs: &TyVar{
 							Variable: 3,
 						},
-						App: &TyIdent{
+						App: &TyVar{
 							Variable: 1,
 						},
 					},
-					App: &TyIdent{
+					App: &TyVar{
 						Variable: 1,
 					},
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 2,
 				},
 			},
-			frm: TyIdent{Variable: 1},
+			frm: TyVar{Variable: 1},
 			to:  &TyInt{},
 			want: &TyFun{
 				Abs: &TyFun{
 					Abs: &TyFun{
-						Abs: &TyIdent{
+						Abs: &TyVar{
 							Variable: 3,
 						},
 						App: &TyInt{},
 					},
 					App: &TyInt{},
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 2,
 				},
 			},
@@ -107,7 +107,7 @@ func TestConvert(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
 
-			got := tc.typ.Convert(tc.frm, tc.to)
+			got := tc.typ.replace(tc.frm, tc.to)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("returned unexpected difference (-want +got):\n%s", diff)
@@ -121,7 +121,7 @@ func TestVariables(t *testing.T) {
 
 	testCases := []struct {
 		name string
-		typ  Type
+		typ  Typ
 		want []Variable
 	}{
 		{
@@ -145,10 +145,10 @@ func TestVariables(t *testing.T) {
 		{
 			name: "function ident to ident",
 			typ: &TyFun{
-				Abs: &TyIdent{
+				Abs: &TyVar{
 					Variable: 1,
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 1,
 				},
 			},
@@ -159,18 +159,18 @@ func TestVariables(t *testing.T) {
 			typ: &TyFun{
 				Abs: &TyFun{
 					Abs: &TyFun{
-						Abs: &TyIdent{
+						Abs: &TyVar{
 							Variable: 3,
 						},
-						App: &TyIdent{
+						App: &TyVar{
 							Variable: 1,
 						},
 					},
-					App: &TyIdent{
+					App: &TyVar{
 						Variable: 1,
 					},
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 3,
 				},
 			},

@@ -18,28 +18,28 @@ func TestUnify(t *testing.T) {
 			name: "x↦Bool y↦(x→Int)",
 			input: []Constraint{
 				{
-					Left:  &TyIdent{Variable: 1},
+					Left:  &TyVar{Variable: 1},
 					Right: &TyBool{},
 				},
 				{
-					Left: &TyIdent{Variable: 2},
+					Left: &TyVar{Variable: 2},
 					Right: &TyFun{
-						Abs: &TyIdent{Variable: 1},
+						Abs: &TyVar{Variable: 1},
 						App: &TyInt{},
 					},
 				},
 			},
 			want: []Substitution{
 				{
-					Variable: 2,
+					Var: TyVar{Variable: 2},
 					Type: &TyFun{
 						Abs: &TyBool{},
 						App: &TyInt{},
 					},
 				},
 				{
-					Variable: 1,
-					Type:     &TyBool{},
+					Var:  TyVar{Variable: 1},
+					Type: &TyBool{},
 				},
 			},
 		},
@@ -47,26 +47,26 @@ func TestUnify(t *testing.T) {
 			name: "y↦(x→Int), x↦Bool (reversed from the previous case)",
 			input: []Constraint{
 				{
-					Left: &TyIdent{Variable: 2},
+					Left: &TyVar{Variable: 2},
 					Right: &TyFun{
-						Abs: &TyIdent{Variable: 1},
+						Abs: &TyVar{Variable: 1},
 						App: &TyInt{},
 					},
 				},
 				{
-					Left:  &TyIdent{Variable: 1},
+					Left:  &TyVar{Variable: 1},
 					Right: &TyBool{},
 				},
 			},
 			want: []Substitution{
 				{
-					Variable: 1,
-					Type:     &TyBool{},
+					Var:  TyVar{Variable: 1},
+					Type: &TyBool{},
 				},
 				{
-					Variable: 2,
+					Var: TyVar{Variable: 2},
 					Type: &TyFun{
-						Abs: &TyIdent{Variable: 1},
+						Abs: &TyVar{Variable: 1},
 						App: &TyInt{},
 					},
 				},
