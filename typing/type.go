@@ -68,12 +68,26 @@ func ContainsIn(vars []Variable, target Variable) bool {
 }
 
 // ----------------------------------------------------------------------------
-// Type
+// TyScheme
 
-type Type interface {
-	Convert(TyVar, Type) Type
+type TyScheme interface {
+	tyScheme()
 	Variables() []Variable
 }
+
+type Sch interface {
+	TyScheme
+	sch()
+}
+
+type Typ interface {
+	TyScheme
+	typ()
+	replace(TyVar, Typ) Typ
+}
+
+// ----------------------------------------------------------------------------
+// Typ
 
 type (
 	TyInt struct{}
@@ -81,8 +95,8 @@ type (
 	TyBool struct{}
 
 	TyFun struct {
-		Abs Type
-		App Type
+		Abs Typ
+		App Typ
 	}
 
 	TyVar struct {
@@ -90,39 +104,70 @@ type (
 	}
 )
 
-func NewFreshTyVar() *TyVar {
+func FreshTyVar() *TyVar {
 	return &TyVar{Variable: fresh()}
 }
 
-func (t *TyInt) Convert(TyVar, Type) Type {
+func (t *TyInt) replace(frm TyVar, to Typ) Typ {
 	return t
 }
-func (t *TyBool) Convert(TyVar, Type) Type {
+func (t *TyBool) replace(frm TyVar, to Typ) Typ {
 	return t
 }
-func (t *TyFun) Convert(ident TyVar, to Type) Type {
-	abs := t.Abs.Convert(ident, to)
-	app := t.App.Convert(ident, to)
+func (t *TyFun) replace(frm TyVar, to Typ) Typ {
+	abs := t.Abs.replace(frm, to)
+	app := t.App.replace(frm, to)
 	return &TyFun{Abs: abs, App: app}
 }
-func (t *TyVar) Convert(ident TyVar, to Type) Type {
-	if t.Variable == ident.Variable {
+func (t *TyVar) replace(frm TyVar, to Typ) Typ {
+	if frm == *t {
 		return to
 	}
 	return t
 }
 
-func (*TyInt) Variables() []Variable {
+func (t *TyInt) Variables() []Variable {
 	return []Variable{}
 }
-func (*TyBool) Variables() []Variable {
+func (t *TyBool) Variables() []Variable {
 	return []Variable{}
 }
 func (t *TyFun) Variables() []Variable {
-	absVars := t.Abs.Variables()
-	appVars := t.App.Variables()
-	return union(absVars, appVars)
+	v1 := t.Abs.Variables()
+	v2 := t.App.Variables()
+	return union(v1, v2)
 }
 func (t *TyVar) Variables() []Variable {
 	return []Variable{t.Variable}
 }
+
+func (*TyInt) tyScheme()  {}
+func (*TyBool) tyScheme() {}
+func (*TyFun) tyScheme()  {}
+func (*TyVar) tyScheme()  {}
+
+func (*TyInt) typ()  {}
+func (*TyBool) typ() {}
+func (*TyFun) typ()  {}
+func (*TyVar) typ()  {}
+
+// ----------------------------------------------------------------------------
+// Sch
+
+type Scheme struct {
+	BTV  []Variable
+	Type Typ
+}
+
+func (*Scheme) tyScheme() {}
+
+func (*Scheme) sch() {}
+
+func NewScheme(typ Typ) *Scheme {
+	return &Scheme{BTV: []Variable{}, Type: typ}
+}
+
+// func FreeVariables(s Scheme) []Variable {
+// 	vars := s.Type.Variables()
+// 	return difference(vars, s.BoundVars)
+// }

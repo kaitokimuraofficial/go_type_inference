@@ -8,7 +8,7 @@ import (
 )
 
 // Infer receives term and type environment, returns substitution and type
-func Infer(node ast.Node, env *Environment) ([]Substitution, Type) {
+func Infer(node ast.Node, env *Environment) ([]Substitution, Scheme) {
 	switch n := node.(type) {
 	case *ast.DeclStmt:
 		return Infer(n.Decl, env)
@@ -17,11 +17,11 @@ func Infer(node ast.Node, env *Environment) ([]Substitution, Type) {
 	case *ast.LetDecl:
 		return inferLetDecl(*n, env)
 	case *ast.Integer:
-		return []Substitution{}, &TyInt{}
+		return []Substitution{}, Scheme{BTV: []Variable{}, Type: &TyInt{}}
 	case *ast.Boolean:
-		return []Substitution{}, &TyBool{}
+		return []Substitution{}, Scheme{BTV: []Variable{}, Type: &TyBool{}}
 	case *ast.Identifier:
-		return inferIdentifier(*n, env)
+		return inferVar(*n, env)
 	case *ast.BinOpExpr:
 		return inferBinOpExpr(*n, env)
 	case *ast.IfExpr:
@@ -36,144 +36,102 @@ func Infer(node ast.Node, env *Environment) ([]Substitution, Type) {
 		log.Fatalf("unexpected node type: %T", n)
 	}
 
-	return nil, nil
+	return nil, Scheme{BTV: []Variable{}, Type: nil}
 }
 
-func inferLetDecl(d ast.LetDecl, env *Environment) ([]Substitution, Type) {
+func inferLetDecl(d ast.LetDecl, env *Environment) ([]Substitution, Scheme) {
 	s, t := Infer(d.Expr, env)
 	cs := ConvertTo(s)
 	subst := Unify(cs)
 
-	typ := Substitute(subst, t)
+	typ := Substitute(subst, t.Type)
 	sch := NewScheme(typ)
 	for _, v := range typ.Variables() {
 		vs := strconv.Itoa(int(v))
 		if _, ok := env.Get(ast.Identifier{Value: vs}); !ok {
-			sch.BoundVars = append(sch.BoundVars, v)
+			sch.BTV = append(sch.BTV, v)
 		}
 	}
 
 	env.Set(d.Id, *sch)
-	return []Substitution{}, sch.Type
+	return []Substitution{}, *sch
 }
 
-func inferIdentifier(i ast.Identifier, env *Environment) ([]Substitution, Type) {
+func inferVar(i ast.Identifier, env *Environment) ([]Substitution, Scheme) {
 	sch, ok := env.Get(i)
 	if !ok {
 		log.Fatalf("variable %q is not bound", i.Value)
 	}
 
 	subst := []Substitution{}
-	for _, boundVar := range sch.BoundVars {
-		subst = append(subst, struct {
-			Variable Variable
-			Type     Type
-		}{
-			Variable: boundVar,
-			Type:     NewFreshTyVar(),
+	for _, bv := range sch.BTV {
+		subst = append(subst, Substitution{
+			Var:  TyVar{Variable: bv},
+			Type: FreshTyVar(),
 		})
 	}
 
-	return []Substitution{}, Substitute(subst, sch.Type)
+	return []Substitution{}, Scheme{BTV: []Variable{}, Type: Substitute(subst, sch.Type)}
 }
 
-func inferBinOpExpr(e ast.BinOpExpr, env *Environment) ([]Substitution, Type) {
+func inferBinOpExpr(e ast.BinOpExpr, env *Environment) ([]Substitution, Scheme) {
 	ls, lt := Infer(e.Left, env)
 	rs, rt := Infer(e.Right, env)
 
-	c, t := inferPrimitive(e.Op, lt, rt)
+	var b Typ
 
-	newCS := Union(ConvertTo(ls), ConvertTo(rs), c)
+	switch e.Op {
+	case token.PLUS, token.ASTERISK:
+		b = &TyInt{}
+	case token.LT:
+		b = &TyBool{}
+	}
+
+	newCS := Union(ConvertTo(ls), ConvertTo(rs), []Constraint{{
+		Left:  lt.Type,
+		Right: &TyInt{},
+	},
+		{
+			Left:  rt.Type,
+			Right: &TyInt{},
+		}})
 
 	s := Unify(newCS)
 
-	return s, Substitute(s, t)
+	return s, Scheme{BTV: []Variable{}, Type: Substitute(s, b)}
 }
 
-// inferPrimitive receives token.Type and two Type, returns Constraints and Type
-func inferPrimitive(op token.Type, left Type, right Type) ([]Constraint, Type) {
-	switch op {
-	case token.PLUS:
-		c := []Constraint{
-			{
-				Left:  left,
-				Right: &TyInt{},
-			},
-			{
-				Left:  right,
-				Right: &TyInt{},
-			},
-		}
-		return c, &TyInt{}
-	case token.ASTERISK:
-		c := []Constraint{
-			{
-				Left:  left,
-				Right: &TyInt{},
-			},
-			{
-				Left:  right,
-				Right: &TyInt{},
-			},
-		}
-		return c, &TyInt{}
-	case token.LT:
-		c := []Constraint{
-			{
-				Left:  left,
-				Right: &TyInt{},
-			},
-			{
-				Left:  right,
-				Right: &TyInt{},
-			},
-		}
-
-		return c, &TyBool{}
-	default:
-		log.Fatalf("%s is not supported operator type", op)
-	}
-
-	return nil, nil
-}
-
-func inferIfExpr(e ast.IfExpr, env *Environment) ([]Substitution, Type) {
+func inferIfExpr(e ast.IfExpr, env *Environment) ([]Substitution, Scheme) {
 	s1, t1 := Infer(e.Condition, env)
 	s2, t2 := Infer(e.Consequence, env)
 	s3, t3 := Infer(e.Alternative, env)
 
-	cs1 := []Constraint{
+	newCS := Union(ConvertTo(s1), ConvertTo(s2), ConvertTo(s3), []Constraint{
 		{
-			Left:  t1,
+			Left:  t1.Type,
 			Right: &TyBool{},
 		},
-	}
-
-	cs2 := []Constraint{
 		{
-			Left:  t2,
-			Right: t3,
-		},
-	}
-
-	newCS := Union(ConvertTo(s1), ConvertTo(s2), ConvertTo(s3), cs1, cs2)
+			Left:  t2.Type,
+			Right: t3.Type,
+		}})
 
 	s := Unify(newCS)
 
-	return s, Substitute(s, t2)
+	return s, Scheme{BTV: []Variable{}, Type: Substitute(s, t2.Type)}
 }
 
-func inferLetExpr(e ast.LetExpr, env *Environment) ([]Substitution, Type) {
+func inferLetExpr(e ast.LetExpr, env *Environment) ([]Substitution, Scheme) {
 	s1, t1 := Infer(e.BindingExpr, env)
 	cs := ConvertTo(s1)
 	subst := Unify(cs)
 
-	bindingTyp := Substitute(subst, t1)
+	bindingTyp := Substitute(subst, t1.Type)
 	sch := NewScheme(bindingTyp)
 	for _, v := range bindingTyp.Variables() {
 		vs := strconv.Itoa(int(v))
 		if _, ok := env.Get(ast.Identifier{Value: vs}); !ok {
-			sch.BoundVars = append(sch.BoundVars, v)
+			sch.BTV = append(sch.BTV, v)
 		}
 	}
 
@@ -184,36 +142,35 @@ func inferLetExpr(e ast.LetExpr, env *Environment) ([]Substitution, Type) {
 
 	s := Unify(newCS)
 
-	return s, Substitute(s, t2)
+	return s, Scheme{BTV: []Variable{}, Type: Substitute(s, t2.Type)}
 }
 
-func inferFunExpr(e ast.FunExpr, env *Environment) ([]Substitution, Type) {
-	freshIdent := NewFreshTyVar()
+func inferFunExpr(e ast.FunExpr, env *Environment) ([]Substitution, Scheme) {
+	freshIdent := FreshTyVar()
 	env.Set(e.Param, *NewScheme(freshIdent))
 
 	s, t := Infer(e.BodyExpr, env)
 
-	return s, &TyFun{Abs: Substitute(s, freshIdent), App: t}
+	return s, Scheme{BTV: []Variable{}, Type: &TyFun{Abs: Substitute(s, freshIdent), App: t.Type}}
 }
 
-func inferAppExpr(e ast.AppExpr, env *Environment) ([]Substitution, Type) {
+func inferAppExpr(e ast.AppExpr, env *Environment) ([]Substitution, Scheme) {
 	s1, t1 := Infer(e.Function, env)
 	s2, t2 := Infer(e.Argument, env)
 
-	freshIdent := NewFreshTyVar()
+	freshIdent := FreshTyVar()
 
-	cs := []Constraint{
+	newCS := Union(ConvertTo(s1), ConvertTo(s2), []Constraint{
 		{
-			Left: t1,
+			Left: t1.Type,
 			Right: &TyFun{
-				Abs: t2,
+				Abs: t2.Type,
 				App: freshIdent,
 			},
 		},
-	}
-	newCS := Union(ConvertTo(s1), ConvertTo(s2), cs)
+	})
 
 	s := Unify(newCS)
 
-	return s, Substitute(s, freshIdent)
+	return s, Scheme{BTV: []Variable{}, Type: Substitute(s, freshIdent)}
 }

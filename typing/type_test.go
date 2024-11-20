@@ -7,15 +7,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestConvert(t *testing.T) {
+func TestReplace(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		desc string
-		typ  Type
+		typ  Typ
 		frm  TyVar
-		to   Type
-		want Type
+		to   Typ
+		want Typ
 	}{
 		{
 			desc: "TyInt does not change",
@@ -107,7 +107,7 @@ func TestConvert(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
 
-			got := tc.typ.Convert(tc.frm, tc.to)
+			got := tc.typ.replace(tc.frm, tc.to)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("returned unexpected difference (-want +got):\n%s", diff)
@@ -121,7 +121,7 @@ func TestVariables(t *testing.T) {
 
 	testCases := []struct {
 		name string
-		typ  Type
+		typ  Typ
 		want []Variable
 	}{
 		{

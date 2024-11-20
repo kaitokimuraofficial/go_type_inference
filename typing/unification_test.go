@@ -31,15 +31,15 @@ func TestUnify(t *testing.T) {
 			},
 			want: []Substitution{
 				{
-					Variable: 2,
+					Var: TyVar{Variable: 2},
 					Type: &TyFun{
 						Abs: &TyBool{},
 						App: &TyInt{},
 					},
 				},
 				{
-					Variable: 1,
-					Type:     &TyBool{},
+					Var:  TyVar{Variable: 1},
+					Type: &TyBool{},
 				},
 			},
 		},
@@ -60,11 +60,11 @@ func TestUnify(t *testing.T) {
 			},
 			want: []Substitution{
 				{
-					Variable: 1,
-					Type:     &TyBool{},
+					Var:  TyVar{Variable: 1},
+					Type: &TyBool{},
 				},
 				{
-					Variable: 2,
+					Var: TyVar{Variable: 2},
 					Type: &TyFun{
 						Abs: &TyVar{Variable: 1},
 						App: &TyInt{},

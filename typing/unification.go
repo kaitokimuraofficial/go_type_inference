@@ -7,8 +7,8 @@ import "log"
 
 // Constraint represents a set of constraints that the type must satisfy.
 type Constraint struct {
-	Left  Type
-	Right Type
+	Left  Typ
+	Right Typ
 }
 
 func Unify(cs []Constraint) []Substitution {
@@ -16,46 +16,51 @@ func Unify(cs []Constraint) []Substitution {
 		left, right := c.Left, c.Right
 
 		if left == right {
-			newCS := append(cs[:i], cs[i+1:]...)
-			return Unify(newCS)
+			return Unify(append(cs[:i], cs[i+1:]...))
 		}
 
 		lf, lok := left.(*TyFun)
 		rf, rok := right.(*TyFun)
 		if lok && rok {
-			newCS := append(cs[:i], cs[i+1:]...)
-			newCS = append(newCS,
-				Constraint{Left: lf.Abs, Right: rf.Abs},
-				Constraint{Left: lf.App, Right: rf.App},
-			)
-			return Unify(newCS)
+			return Unify(append(
+				cs[:i],
+				append(
+					cs[i+1:],
+					Constraint{Left: lf.Abs, Right: rf.Abs},
+					Constraint{Left: lf.App, Right: rf.App},
+				)...,
+			))
 		}
 
 		li, lok := left.(*TyVar)
 		if lok && !ContainsIn(right.Variables(), li.Variable) {
 			newCS := append(cs[:i], cs[i+1:]...)
-			replaced := replace(newCS, *li, right)
-			substitution := Unify(replaced)
-			return append(substitution, struct {
-				Variable Variable
-				Type     Type
-			}{
-				Variable: li.Variable,
-				Type:     right,
+			for i, c := range newCS {
+				l := c.Left.replace(*li, right)
+				r := c.Right.replace(*li, right)
+				newCS[i] = Constraint{Left: l, Right: r}
+			}
+
+			substitution := Unify(newCS)
+			return append(substitution, Substitution{
+				Var:  TyVar{Variable: li.Variable},
+				Type: right,
 			})
 		}
 
 		ri, rok := right.(*TyVar)
 		if rok && !ContainsIn(left.Variables(), ri.Variable) {
 			newCS := append(cs[:i], cs[i+1:]...)
-			replaced := replace(newCS, *ri, left)
-			substitution := Unify(replaced)
-			return append(substitution, struct {
-				Variable Variable
-				Type     Type
-			}{
-				Variable: ri.Variable,
-				Type:     left,
+			for i, c := range newCS {
+				l := c.Left.replace(*ri, left)
+				r := c.Right.replace(*ri, left)
+				newCS[i] = Constraint{Left: l, Right: r}
+			}
+
+			substitution := Unify(newCS)
+			return append(substitution, Substitution{
+				Var:  TyVar{Variable: ri.Variable},
+				Type: left,
 			})
 		}
 	}
@@ -79,26 +84,13 @@ func Union(lists ...[]Constraint) []Constraint {
 	return combined
 }
 
-// replace replaces all occurrences of the 'frm' TyVar in the Constraints to the 'to' type.
-func replace(cs []Constraint, frm TyVar, to Type) []Constraint {
-	replaced := []Constraint{}
-
-	for _, c := range cs {
-		replaced = append(replaced, Constraint{
-			Left:  c.Left.Convert(frm, to),
-			Right: c.Right.Convert(frm, to),
-		})
-	}
-	return replaced
-}
-
 // ----------------------------------------------------------------------------
 // Substitution
 
 // Substitution represents the mapping of type variables to their inferred results.
 type Substitution struct {
-	Variable Variable
-	Type     Type
+	Var  TyVar
+	Type Typ
 }
 
 func ConvertTo(ss []Substitution) []Constraint {
@@ -106,7 +98,7 @@ func ConvertTo(ss []Substitution) []Constraint {
 
 	for _, s := range ss {
 		tmp := Constraint{
-			Left:  &TyVar{Variable: s.Variable},
+			Left:  &s.Var,
 			Right: s.Type,
 		}
 		cs = append(cs, tmp)
@@ -115,7 +107,7 @@ func ConvertTo(ss []Substitution) []Constraint {
 	return cs
 }
 
-func Substitute(ss []Substitution, typ Type) Type {
+func Substitute(ss []Substitution, typ Typ) Typ {
 	switch t := typ.(type) {
 	case *TyInt:
 		return &TyInt{}
@@ -125,7 +117,7 @@ func Substitute(ss []Substitution, typ Type) Type {
 		return &TyFun{Abs: Substitute(ss, t.Abs), App: Substitute(ss, t.App)}
 	case *TyVar:
 		for _, s := range ss {
-			if s.Variable == t.Variable {
+			if s.Var == *t {
 				return s.Type
 			}
 		}
