@@ -31,7 +31,7 @@ func Unify(cs []Constraint) []Substitution {
 			return Unify(newCS)
 		}
 
-		li, lok := left.(*TyIdent)
+		li, lok := left.(*TyVar)
 		if lok && !ContainsIn(right.Variables(), li.Variable) {
 			newCS := append(cs[:i], cs[i+1:]...)
 			replaced := replace(newCS, *li, right)
@@ -45,7 +45,7 @@ func Unify(cs []Constraint) []Substitution {
 			})
 		}
 
-		ri, rok := right.(*TyIdent)
+		ri, rok := right.(*TyVar)
 		if rok && !ContainsIn(left.Variables(), ri.Variable) {
 			newCS := append(cs[:i], cs[i+1:]...)
 			replaced := replace(newCS, *ri, left)
@@ -79,8 +79,8 @@ func Union(lists ...[]Constraint) []Constraint {
 	return combined
 }
 
-// replace replaces all occurrences of the 'frm' TyIdent in the Constraints to the 'to' type.
-func replace(cs []Constraint, frm TyIdent, to Type) []Constraint {
+// replace replaces all occurrences of the 'frm' TyVar in the Constraints to the 'to' type.
+func replace(cs []Constraint, frm TyVar, to Type) []Constraint {
 	replaced := []Constraint{}
 
 	for _, c := range cs {
@@ -106,7 +106,7 @@ func ConvertTo(ss []Substitution) []Constraint {
 
 	for _, s := range ss {
 		tmp := Constraint{
-			Left:  &TyIdent{Variable: s.Variable},
+			Left:  &TyVar{Variable: s.Variable},
 			Right: s.Type,
 		}
 		cs = append(cs, tmp)
@@ -123,7 +123,7 @@ func Substitute(ss []Substitution, typ Type) Type {
 		return &TyBool{}
 	case *TyFun:
 		return &TyFun{Abs: Substitute(ss, t.Abs), App: Substitute(ss, t.App)}
-	case *TyIdent:
+	case *TyVar:
 		for _, s := range ss {
 			if s.Variable == t.Variable {
 				return s.Type

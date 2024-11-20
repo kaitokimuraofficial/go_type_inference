@@ -13,49 +13,49 @@ func TestConvert(t *testing.T) {
 	testCases := []struct {
 		desc string
 		typ  Type
-		frm  TyIdent
+		frm  TyVar
 		to   Type
 		want Type
 	}{
 		{
 			desc: "TyInt does not change",
 			typ:  &TyInt{},
-			frm:  TyIdent{Variable: 1},
+			frm:  TyVar{Variable: 1},
 			to:   &TyInt{},
 			want: &TyInt{},
 		},
 		{
 			desc: "TyBool does not change",
 			typ:  &TyBool{},
-			frm:  TyIdent{Variable: 1},
+			frm:  TyVar{Variable: 1},
 			to:   &TyInt{},
 			want: &TyBool{},
 		},
 		{
 			desc: "TyIndent converts if it matches",
-			typ:  &TyIdent{Variable: 1},
-			frm:  TyIdent{Variable: 1},
+			typ:  &TyVar{Variable: 1},
+			frm:  TyVar{Variable: 1},
 			to:   &TyInt{},
 			want: &TyInt{},
 		},
 		{
 			desc: "TyIndent does not convert if it does not match",
-			typ:  &TyIdent{Variable: 1},
-			frm:  TyIdent{Variable: 2},
+			typ:  &TyVar{Variable: 1},
+			frm:  TyVar{Variable: 2},
 			to:   &TyInt{},
-			want: &TyIdent{Variable: 1},
+			want: &TyVar{Variable: 1},
 		},
 		{
 			desc: "simple TyFun case",
 			typ: &TyFun{
-				Abs: &TyIdent{
+				Abs: &TyVar{
 					Variable: 1,
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 1,
 				},
 			},
-			frm: TyIdent{Variable: 1},
+			frm: TyVar{Variable: 1},
 			to:  &TyBool{},
 			want: &TyFun{
 				Abs: &TyBool{},
@@ -67,34 +67,34 @@ func TestConvert(t *testing.T) {
 			typ: &TyFun{
 				Abs: &TyFun{
 					Abs: &TyFun{
-						Abs: &TyIdent{
+						Abs: &TyVar{
 							Variable: 3,
 						},
-						App: &TyIdent{
+						App: &TyVar{
 							Variable: 1,
 						},
 					},
-					App: &TyIdent{
+					App: &TyVar{
 						Variable: 1,
 					},
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 2,
 				},
 			},
-			frm: TyIdent{Variable: 1},
+			frm: TyVar{Variable: 1},
 			to:  &TyInt{},
 			want: &TyFun{
 				Abs: &TyFun{
 					Abs: &TyFun{
-						Abs: &TyIdent{
+						Abs: &TyVar{
 							Variable: 3,
 						},
 						App: &TyInt{},
 					},
 					App: &TyInt{},
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 2,
 				},
 			},
@@ -145,10 +145,10 @@ func TestVariables(t *testing.T) {
 		{
 			name: "function ident to ident",
 			typ: &TyFun{
-				Abs: &TyIdent{
+				Abs: &TyVar{
 					Variable: 1,
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 1,
 				},
 			},
@@ -159,18 +159,18 @@ func TestVariables(t *testing.T) {
 			typ: &TyFun{
 				Abs: &TyFun{
 					Abs: &TyFun{
-						Abs: &TyIdent{
+						Abs: &TyVar{
 							Variable: 3,
 						},
-						App: &TyIdent{
+						App: &TyVar{
 							Variable: 1,
 						},
 					},
-					App: &TyIdent{
+					App: &TyVar{
 						Variable: 1,
 					},
 				},
-				App: &TyIdent{
+				App: &TyVar{
 					Variable: 3,
 				},
 			},

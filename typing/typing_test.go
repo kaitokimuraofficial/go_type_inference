@@ -93,8 +93,8 @@ func TestInfer(t *testing.T) {
 			name:  "let poly declaration",
 			input: "let f = fun x -> x",
 			want: &TyFun{
-				Abs: &TyIdent{Variable: 0},
-				App: &TyIdent{Variable: 0},
+				Abs: &TyVar{Variable: 0},
+				App: &TyVar{Variable: 0},
 			},
 		},
 		{

@@ -18,13 +18,13 @@ func TestUnify(t *testing.T) {
 			name: "x↦Bool y↦(x→Int)",
 			input: []Constraint{
 				{
-					Left:  &TyIdent{Variable: 1},
+					Left:  &TyVar{Variable: 1},
 					Right: &TyBool{},
 				},
 				{
-					Left: &TyIdent{Variable: 2},
+					Left: &TyVar{Variable: 2},
 					Right: &TyFun{
-						Abs: &TyIdent{Variable: 1},
+						Abs: &TyVar{Variable: 1},
 						App: &TyInt{},
 					},
 				},
@@ -47,14 +47,14 @@ func TestUnify(t *testing.T) {
 			name: "y↦(x→Int), x↦Bool (reversed from the previous case)",
 			input: []Constraint{
 				{
-					Left: &TyIdent{Variable: 2},
+					Left: &TyVar{Variable: 2},
 					Right: &TyFun{
-						Abs: &TyIdent{Variable: 1},
+						Abs: &TyVar{Variable: 1},
 						App: &TyInt{},
 					},
 				},
 				{
-					Left:  &TyIdent{Variable: 1},
+					Left:  &TyVar{Variable: 1},
 					Right: &TyBool{},
 				},
 			},
@@ -66,7 +66,7 @@ func TestUnify(t *testing.T) {
 				{
 					Variable: 2,
 					Type: &TyFun{
-						Abs: &TyIdent{Variable: 1},
+						Abs: &TyVar{Variable: 1},
 						App: &TyInt{},
 					},
 				},
