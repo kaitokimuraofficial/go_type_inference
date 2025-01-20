@@ -14,7 +14,7 @@ func main() {
 	p := parser.Parse(input)
 
 	// Make Environment
-	env := &eval.Environment{Store: make(map[ast.Identifier]eval.Value)}
+	env := eval.Environment{Store: make(map[ast.Identifier]eval.Value)}
 
 	// Evaluate AST made from parser.Parse
 	e := eval.Eval(p, env)

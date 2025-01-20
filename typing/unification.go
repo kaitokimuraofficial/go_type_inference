@@ -1,6 +1,9 @@
 package typing
 
-import "log"
+import (
+	"log"
+	"slices"
+)
 
 // ----------------------------------------------------------------------------
 // Constraint
@@ -20,8 +23,8 @@ func Unify(cs []Constraint) []Substitution {
 			return Unify(newCS)
 		}
 
-		lf, lok := left.(*TyFun)
-		rf, rok := right.(*TyFun)
+		lf, lok := left.(TyFun)
+		rf, rok := right.(TyFun)
 		if lok && rok {
 			newCS := append(cs[:i], cs[i+1:]...)
 			newCS = append(newCS,
@@ -31,10 +34,10 @@ func Unify(cs []Constraint) []Substitution {
 			return Unify(newCS)
 		}
 
-		li, lok := left.(*TyIdent)
-		if lok && !ContainsIn(right.Variables(), li.Variable) {
+		li, lok := left.(TyVar)
+		if lok && !slices.Contains(right.Variables(), li.Variable) {
 			newCS := append(cs[:i], cs[i+1:]...)
-			replaced := replace(newCS, *li, right)
+			replaced := replace(newCS, li, right)
 			substitution := Unify(replaced)
 			return append(substitution, struct {
 				Variable Variable
@@ -45,10 +48,10 @@ func Unify(cs []Constraint) []Substitution {
 			})
 		}
 
-		ri, rok := right.(*TyIdent)
-		if rok && !ContainsIn(left.Variables(), ri.Variable) {
+		ri, rok := right.(TyVar)
+		if rok && !slices.Contains(left.Variables(), ri.Variable) {
 			newCS := append(cs[:i], cs[i+1:]...)
-			replaced := replace(newCS, *ri, left)
+			replaced := replace(newCS, ri, left)
 			substitution := Unify(replaced)
 			return append(substitution, struct {
 				Variable Variable
@@ -79,8 +82,8 @@ func Union(lists ...[]Constraint) []Constraint {
 	return combined
 }
 
-// replace replaces all occurrences of the 'frm' TyIdent in the Constraints to the 'to' type.
-func replace(cs []Constraint, frm TyIdent, to Type) []Constraint {
+// replace replaces all occurrences of the 'frm' TyVar in the Constraints to the 'to' type.
+func replace(cs []Constraint, frm TyVar, to Type) []Constraint {
 	replaced := []Constraint{}
 
 	for _, c := range cs {
@@ -106,7 +109,7 @@ func ConvertTo(ss []Substitution) []Constraint {
 
 	for _, s := range ss {
 		tmp := Constraint{
-			Left:  &TyIdent{Variable: s.Variable},
+			Left:  TyVar{Variable: s.Variable},
 			Right: s.Type,
 		}
 		cs = append(cs, tmp)
@@ -117,13 +120,13 @@ func ConvertTo(ss []Substitution) []Constraint {
 
 func Substitute(ss []Substitution, typ Type) Type {
 	switch t := typ.(type) {
-	case *TyInt:
-		return &TyInt{}
-	case *TyBool:
-		return &TyBool{}
-	case *TyFun:
-		return &TyFun{Abs: Substitute(ss, t.Abs), App: Substitute(ss, t.App)}
-	case *TyIdent:
+	case TyInt:
+		return TyInt{}
+	case TyBool:
+		return TyBool{}
+	case TyFun:
+		return TyFun{Abs: Substitute(ss, t.Abs), App: Substitute(ss, t.App)}
+	case TyVar:
 		for _, s := range ss {
 			if s.Variable == t.Variable {
 				return s.Type

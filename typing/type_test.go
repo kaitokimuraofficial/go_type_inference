@@ -1,8 +1,10 @@
-package typing
+package typing_test
 
 import (
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"go_type_inference/typing"
 	"testing"
+
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -12,89 +14,89 @@ func TestConvert(t *testing.T) {
 
 	testCases := []struct {
 		desc string
-		typ  Type
-		frm  TyIdent
-		to   Type
-		want Type
+		typ  typing.Type
+		frm  typing.TyVar
+		to   typing.Type
+		want typing.Type
 	}{
 		{
 			desc: "TyInt does not change",
-			typ:  &TyInt{},
-			frm:  TyIdent{Variable: 1},
-			to:   &TyInt{},
-			want: &TyInt{},
+			typ:  typing.TyInt{},
+			frm:  typing.TyVar{Variable: 1},
+			to:   typing.TyInt{},
+			want: typing.TyInt{},
 		},
 		{
 			desc: "TyBool does not change",
-			typ:  &TyBool{},
-			frm:  TyIdent{Variable: 1},
-			to:   &TyInt{},
-			want: &TyBool{},
+			typ:  typing.TyBool{},
+			frm:  typing.TyVar{Variable: 1},
+			to:   typing.TyInt{},
+			want: typing.TyBool{},
 		},
 		{
 			desc: "TyIndent converts if it matches",
-			typ:  &TyIdent{Variable: 1},
-			frm:  TyIdent{Variable: 1},
-			to:   &TyInt{},
-			want: &TyInt{},
+			typ:  typing.TyVar{Variable: 1},
+			frm:  typing.TyVar{Variable: 1},
+			to:   typing.TyInt{},
+			want: typing.TyInt{},
 		},
 		{
 			desc: "TyIndent does not convert if it does not match",
-			typ:  &TyIdent{Variable: 1},
-			frm:  TyIdent{Variable: 2},
-			to:   &TyInt{},
-			want: &TyIdent{Variable: 1},
+			typ:  typing.TyVar{Variable: 1},
+			frm:  typing.TyVar{Variable: 2},
+			to:   typing.TyInt{},
+			want: typing.TyVar{Variable: 1},
 		},
 		{
 			desc: "simple TyFun case",
-			typ: &TyFun{
-				Abs: &TyIdent{
+			typ: typing.TyFun{
+				Abs: typing.TyVar{
 					Variable: 1,
 				},
-				App: &TyIdent{
+				App: typing.TyVar{
 					Variable: 1,
 				},
 			},
-			frm: TyIdent{Variable: 1},
-			to:  &TyBool{},
-			want: &TyFun{
-				Abs: &TyBool{},
-				App: &TyBool{},
+			frm: typing.TyVar{Variable: 1},
+			to:  typing.TyBool{},
+			want: typing.TyFun{
+				Abs: typing.TyBool{},
+				App: typing.TyBool{},
 			},
 		},
 		{
 			desc: "complicated TyFun case",
-			typ: &TyFun{
-				Abs: &TyFun{
-					Abs: &TyFun{
-						Abs: &TyIdent{
+			typ: typing.TyFun{
+				Abs: typing.TyFun{
+					Abs: typing.TyFun{
+						Abs: typing.TyVar{
 							Variable: 3,
 						},
-						App: &TyIdent{
+						App: typing.TyVar{
 							Variable: 1,
 						},
 					},
-					App: &TyIdent{
+					App: typing.TyVar{
 						Variable: 1,
 					},
 				},
-				App: &TyIdent{
+				App: typing.TyVar{
 					Variable: 2,
 				},
 			},
-			frm: TyIdent{Variable: 1},
-			to:  &TyInt{},
-			want: &TyFun{
-				Abs: &TyFun{
-					Abs: &TyFun{
-						Abs: &TyIdent{
+			frm: typing.TyVar{Variable: 1},
+			to:  typing.TyInt{},
+			want: typing.TyFun{
+				Abs: typing.TyFun{
+					Abs: typing.TyFun{
+						Abs: typing.TyVar{
 							Variable: 3,
 						},
-						App: &TyInt{},
+						App: typing.TyInt{},
 					},
-					App: &TyInt{},
+					App: typing.TyInt{},
 				},
-				App: &TyIdent{
+				App: typing.TyVar{
 					Variable: 2,
 				},
 			},
@@ -121,60 +123,60 @@ func TestVariables(t *testing.T) {
 
 	testCases := []struct {
 		name string
-		typ  Type
-		want []Variable
+		typ  typing.Type
+		want []typing.Variable
 	}{
 		{
 			name: "integer",
-			typ:  &TyInt{},
-			want: []Variable{},
+			typ:  typing.TyInt{},
+			want: []typing.Variable{},
 		},
 		{
 			name: "boolean",
-			typ:  &TyBool{},
-			want: []Variable{},
+			typ:  typing.TyBool{},
+			want: []typing.Variable{},
 		},
 		{
 			name: "function bool to bool",
-			typ: &TyFun{
-				Abs: &TyBool{},
-				App: &TyBool{},
+			typ: typing.TyFun{
+				Abs: typing.TyBool{},
+				App: typing.TyBool{},
 			},
-			want: []Variable{},
+			want: []typing.Variable{},
 		},
 		{
 			name: "function ident to ident",
-			typ: &TyFun{
-				Abs: &TyIdent{
+			typ: typing.TyFun{
+				Abs: typing.TyVar{
 					Variable: 1,
 				},
-				App: &TyIdent{
+				App: typing.TyVar{
 					Variable: 1,
 				},
 			},
-			want: []Variable{1},
+			want: []typing.Variable{1},
 		},
 		{
 			name: "nested function",
-			typ: &TyFun{
-				Abs: &TyFun{
-					Abs: &TyFun{
-						Abs: &TyIdent{
+			typ: typing.TyFun{
+				Abs: typing.TyFun{
+					Abs: typing.TyFun{
+						Abs: typing.TyVar{
 							Variable: 3,
 						},
-						App: &TyIdent{
+						App: typing.TyVar{
 							Variable: 1,
 						},
 					},
-					App: &TyIdent{
+					App: typing.TyVar{
 						Variable: 1,
 					},
 				},
-				App: &TyIdent{
+				App: typing.TyVar{
 					Variable: 3,
 				},
 			},
-			want: []Variable{1, 3},
+			want: []typing.Variable{1, 3},
 		},
 	}
 
@@ -186,7 +188,7 @@ func TestVariables(t *testing.T) {
 
 			got := tc.typ.Variables()
 
-			opt := cmpopts.SortSlices(func(i, j Variable) bool {
+			opt := cmpopts.SortSlices(func(i, j typing.Variable) bool {
 				return i < j
 			})
 

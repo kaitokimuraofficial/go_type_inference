@@ -57,23 +57,55 @@ func difference(vars1, vars2 []Variable) []Variable {
 	return keys
 }
 
-// ContainsIn checks if a given list of Variable contains a specific Variable
-func ContainsIn(vars []Variable, target Variable) bool {
-	for _, v := range vars {
-		if v == target {
-			return true
-		}
-	}
-	return false
-}
-
 // ----------------------------------------------------------------------------
 // Type
 
 type Type interface {
-	Convert(TyIdent, Type) Type
+	Convert(TyVar, Type) Type
 	Variables() []Variable
+	typ()
 }
+
+type Mono interface {
+	Type
+	monoType()
+}
+
+type Poly interface {
+	Type
+	polyType()
+}
+
+// ----------------------------------------------------------------------------
+// Polymorphic Type
+
+type TyScheme struct {
+	BoundVars []Variable
+	Type      Type
+}
+
+func NewScheme(typ Type) TyScheme {
+	return TyScheme{BoundVars: []Variable{}, Type: typ}
+}
+
+func FreeVariables(s TyScheme) []Variable {
+	vars := s.Type.Variables()
+	return difference(vars, s.BoundVars)
+}
+
+func (t TyScheme) Convert(TyVar, Type) Type {
+	return TyBool{}
+}
+func (t TyScheme) Variables() []Variable {
+	return t.BoundVars
+}
+
+func (TyScheme) polyType() {}
+
+func (TyScheme) typ() {}
+
+// ----------------------------------------------------------------------------
+// Monomorphic Type
 
 type (
 	TyInt struct{}
@@ -85,44 +117,54 @@ type (
 		App Type
 	}
 
-	TyIdent struct {
+	TyVar struct {
 		Variable Variable
 	}
 )
 
-func NewFreshTyIdent() *TyIdent {
-	return &TyIdent{Variable: fresh()}
+func NewFreshTyVar() TyVar {
+	return TyVar{Variable: fresh()}
 }
 
-func (t *TyInt) Convert(TyIdent, Type) Type {
+func (t TyInt) Convert(TyVar, Type) Type {
 	return t
 }
-func (t *TyBool) Convert(TyIdent, Type) Type {
+func (t TyBool) Convert(TyVar, Type) Type {
 	return t
 }
-func (t *TyFun) Convert(ident TyIdent, to Type) Type {
+func (t TyFun) Convert(ident TyVar, to Type) Type {
 	abs := t.Abs.Convert(ident, to)
 	app := t.App.Convert(ident, to)
-	return &TyFun{Abs: abs, App: app}
+	return TyFun{Abs: abs, App: app}
 }
-func (t *TyIdent) Convert(ident TyIdent, to Type) Type {
+func (t TyVar) Convert(ident TyVar, to Type) Type {
 	if t.Variable == ident.Variable {
 		return to
 	}
 	return t
 }
 
-func (*TyInt) Variables() []Variable {
+func (TyInt) Variables() []Variable {
 	return []Variable{}
 }
-func (*TyBool) Variables() []Variable {
+func (TyBool) Variables() []Variable {
 	return []Variable{}
 }
-func (t *TyFun) Variables() []Variable {
+func (t TyFun) Variables() []Variable {
 	absVars := t.Abs.Variables()
 	appVars := t.App.Variables()
 	return union(absVars, appVars)
 }
-func (t *TyIdent) Variables() []Variable {
+func (t TyVar) Variables() []Variable {
 	return []Variable{t.Variable}
 }
+
+func (TyInt) monoType()  {}
+func (TyBool) monoType() {}
+func (TyFun) monoType()  {}
+func (TyVar) monoType()  {}
+
+func (TyInt) typ()  {}
+func (TyBool) typ() {}
+func (TyFun) typ()  {}
+func (TyVar) typ()  {}

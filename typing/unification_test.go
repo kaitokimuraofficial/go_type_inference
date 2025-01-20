@@ -1,6 +1,7 @@
-package typing
+package typing_test
 
 import (
+	"go_type_inference/typing"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -11,63 +12,63 @@ func TestUnify(t *testing.T) {
 
 	testCases := []struct {
 		name  string
-		input []Constraint
-		want  []Substitution
+		input []typing.Constraint
+		want  []typing.Substitution
 	}{
 		{
 			name: "x↦Bool y↦(x→Int)",
-			input: []Constraint{
+			input: []typing.Constraint{
 				{
-					Left:  &TyIdent{Variable: 1},
-					Right: &TyBool{},
+					Left:  typing.TyVar{Variable: 1},
+					Right: typing.TyBool{},
 				},
 				{
-					Left: &TyIdent{Variable: 2},
-					Right: &TyFun{
-						Abs: &TyIdent{Variable: 1},
-						App: &TyInt{},
+					Left: typing.TyVar{Variable: 2},
+					Right: typing.TyFun{
+						Abs: typing.TyVar{Variable: 1},
+						App: typing.TyInt{},
 					},
 				},
 			},
-			want: []Substitution{
+			want: []typing.Substitution{
 				{
 					Variable: 2,
-					Type: &TyFun{
-						Abs: &TyBool{},
-						App: &TyInt{},
+					Type: typing.TyFun{
+						Abs: typing.TyBool{},
+						App: typing.TyInt{},
 					},
 				},
 				{
 					Variable: 1,
-					Type:     &TyBool{},
+					Type:     typing.TyBool{},
 				},
 			},
 		},
 		{
 			name: "y↦(x→Int), x↦Bool (reversed from the previous case)",
-			input: []Constraint{
+			input: []typing.Constraint{
 				{
-					Left: &TyIdent{Variable: 2},
-					Right: &TyFun{
-						Abs: &TyIdent{Variable: 1},
-						App: &TyInt{},
+					Left: typing.TyVar{Variable: 2},
+					Right: typing.TyFun{
+						Abs: typing.TyVar{Variable: 1},
+						App: typing.TyInt{},
 					},
 				},
 				{
-					Left:  &TyIdent{Variable: 1},
-					Right: &TyBool{},
+					Left:  typing.TyVar{Variable: 1},
+					Right: typing.TyBool{},
 				},
 			},
-			want: []Substitution{
+			want: []typing.Substitution{
 				{
 					Variable: 1,
-					Type:     &TyBool{},
+					Type:     typing.TyBool{},
 				},
 				{
 					Variable: 2,
-					Type: &TyFun{
-						Abs: &TyIdent{Variable: 1},
-						App: &TyInt{},
+					Type: typing.TyFun{
+						Abs: typing.TyVar{Variable: 1},
+						App: typing.TyInt{},
 					},
 				},
 			},
@@ -80,7 +81,7 @@ func TestUnify(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := Unify(tc.input)
+			got := typing.Unify(tc.input)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("returned unexpected difference (-want +got):\n%s", diff)
