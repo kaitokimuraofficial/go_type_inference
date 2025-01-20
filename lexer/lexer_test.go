@@ -1,52 +1,68 @@
-package lexer
+package lexer_test
 
 import (
+	"go_type_inference/lexer"
 	"go_type_inference/token"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestNextToken(t *testing.T) {
-	input := `=*+()
-=*4 ;true in let inlet fun -> rec
-;;
-`
-
-	wants := []struct {
-		Type    token.Type
-		Literal string
+	testCases := []struct {
+		name  string
+		input string
+		want  []token.Token
 	}{
-		{token.ASSIGN, "="},
-		{token.ASTERISK, "*"},
-		{token.PLUS, "+"},
-		{token.LPAREN, "("},
-		{token.RPAREN, ")"},
-		{token.ASSIGN, "="},
-		{token.ASTERISK, "*"},
-		{token.INT, "4"},
-		{token.SEMI, ";"},
-		{token.TRUE, "true"},
-		{token.IN, "in"},
-		{token.LET, "let"},
-		{token.IDENT, "inlet"},
-		{token.FUN, "fun"},
-		{token.RARROW, "->"},
-		{token.REC, "rec"},
-		{token.SEMISEMI, ";;"},
-		{token.EOF, ""},
+		{
+			name: "example sentence",
+			input: `=*+()
+			=*4 ;true in let inlet fun -> rec
+			;;
+			`,
+			want: []token.Token{
+				{Type: token.ASSIGN, Literal: "="},
+				{Type: token.ASTERISK, Literal: "*"},
+				{Type: token.PLUS, Literal: "+"},
+				{Type: token.LPAREN, Literal: "("},
+				{Type: token.RPAREN, Literal: ")"},
+				{Type: token.ASSIGN, Literal: "="},
+				{Type: token.ASTERISK, Literal: "*"},
+				{Type: token.INT, Literal: "4"},
+				{Type: token.SEMI, Literal: ";"},
+				{Type: token.TRUE, Literal: "true"},
+				{Type: token.IN, Literal: "in"},
+				{Type: token.LET, Literal: "let"},
+				{Type: token.IDENT, Literal: "inlet"},
+				{Type: token.FUN, Literal: "fun"},
+				{Type: token.RARROW, Literal: "->"},
+				{Type: token.REC, Literal: "rec"},
+				{Type: token.SEMISEMI, Literal: ";;"},
+				{Type: token.EOF, Literal: ""},
+			},
+		},
 	}
 
-	l := New(input)
+	for _, tc := range testCases {
+		tc := tc
 
-	for _, want := range wants {
-		got := l.NextToken()
+		t.Run(tc.name, func(t *testing.T) {
+			l := lexer.New(tc.input)
 
-		if got.Type != want.Type {
-			t.Errorf("different token types: got %q, but got: %q", got.Type, want.Type)
-		}
+			var got []token.Token
 
-		if got.Literal != want.Literal {
-			t.Errorf("different token literals: got %q, but got: %q", got.Literal, want.Literal)
-		}
+			for {
+				tok := l.NextToken()
+				got = append(got, tok)
+
+				if tok.Type == token.EOF {
+					break
+				}
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("lexer.New(%q) (-want +got):\n%s", tc.input, diff)
+			}
+		})
 	}
-
 }

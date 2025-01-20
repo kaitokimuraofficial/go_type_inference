@@ -73,27 +73,27 @@ type (
 	}
 )
 
-func (*Integer) node()    {}
-func (*Boolean) node()    {}
-func (*Identifier) node() {}
-func (*BinOpExpr) node()  {}
-func (*IfExpr) node()     {}
-func (*LetExpr) node()    {}
-func (*FunExpr) node()    {}
-func (*AppExpr) node()    {}
-func (*LetRecExpr) node() {}
+func (Integer) node()    {}
+func (Boolean) node()    {}
+func (Identifier) node() {}
+func (BinOpExpr) node()  {}
+func (IfExpr) node()     {}
+func (LetExpr) node()    {}
+func (FunExpr) node()    {}
+func (AppExpr) node()    {}
+func (LetRecExpr) node() {}
 
 // exprNode() ensures that only expression nodes can be
 // assigned to an Expr
-func (*Integer) exprNode()    {}
-func (*Boolean) exprNode()    {}
-func (*Identifier) exprNode() {}
-func (*BinOpExpr) exprNode()  {}
-func (*IfExpr) exprNode()     {}
-func (*LetExpr) exprNode()    {}
-func (*FunExpr) exprNode()    {}
-func (*AppExpr) exprNode()    {}
-func (*LetRecExpr) exprNode() {}
+func (Integer) exprNode()    {}
+func (Boolean) exprNode()    {}
+func (Identifier) exprNode() {}
+func (BinOpExpr) exprNode()  {}
+func (IfExpr) exprNode()     {}
+func (LetExpr) exprNode()    {}
+func (FunExpr) exprNode()    {}
+func (AppExpr) exprNode()    {}
+func (LetRecExpr) exprNode() {}
 
 // ----------------------------------------------------------------------------
 // Statements
@@ -108,13 +108,13 @@ type (
 	}
 )
 
-func (*DeclStmt) node() {}
-func (*ExprStmt) node() {}
+func (DeclStmt) node() {}
+func (ExprStmt) node() {}
 
 // stmtNode() ensures that only statement nodes can be
 // assigned to a Stmt.
-func (*DeclStmt) stmtNode() {}
-func (*ExprStmt) stmtNode() {}
+func (DeclStmt) stmtNode() {}
+func (ExprStmt) stmtNode() {}
 
 // ----------------------------------------------------------------------------
 // Declarations
@@ -132,10 +132,10 @@ type (
 	}
 )
 
-func (*LetDecl) node() {}
-func (*RecDecl) node() {}
+func (LetDecl) node() {}
+func (RecDecl) node() {}
 
 // declNode() ensures that only declaration nodes can be
 // assigned to a Decl.
-func (*LetDecl) declNode() {}
-func (*RecDecl) declNode() {}
+func (LetDecl) declNode() {}
+func (RecDecl) declNode() {}

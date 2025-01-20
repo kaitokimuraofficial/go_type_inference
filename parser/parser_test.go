@@ -1,7 +1,8 @@
-package parser
+package parser_test
 
 import (
 	"go_type_inference/ast"
+	"go_type_inference/parser"
 	"go_type_inference/token"
 	"testing"
 
@@ -19,8 +20,8 @@ func TestParse(t *testing.T) {
 		{
 			name:  "identifier",
 			input: "x",
-			want: &ast.ExprStmt{
-				Expr: &ast.Identifier{
+			want: ast.ExprStmt{
+				Expr: ast.Identifier{
 					Value: "x",
 				},
 			},
@@ -28,8 +29,8 @@ func TestParse(t *testing.T) {
 		{
 			name:  "integer",
 			input: "4",
-			want: &ast.ExprStmt{
-				Expr: &ast.Integer{
+			want: ast.ExprStmt{
+				Expr: ast.Integer{
 					Value: 4,
 				},
 			},
@@ -37,8 +38,8 @@ func TestParse(t *testing.T) {
 		{
 			name:  "boolean",
 			input: "true",
-			want: &ast.ExprStmt{
-				Expr: &ast.Boolean{
+			want: ast.ExprStmt{
+				Expr: ast.Boolean{
 					Value: true,
 				},
 			},
@@ -46,13 +47,13 @@ func TestParse(t *testing.T) {
 		{
 			name:  "primitive operator",
 			input: "2 + 3",
-			want: &ast.ExprStmt{
-				Expr: &ast.BinOpExpr{
+			want: ast.ExprStmt{
+				Expr: ast.BinOpExpr{
 					Op: token.PLUS,
-					Left: &ast.Integer{
+					Left: ast.Integer{
 						Value: 2,
 					},
-					Right: &ast.Integer{
+					Right: ast.Integer{
 						Value: 3,
 					},
 				},
@@ -61,15 +62,15 @@ func TestParse(t *testing.T) {
 		{
 			name:  "if expression",
 			input: "if true then true else false",
-			want: &ast.ExprStmt{
-				Expr: &ast.IfExpr{
-					Condition: &ast.Boolean{
+			want: ast.ExprStmt{
+				Expr: ast.IfExpr{
+					Condition: ast.Boolean{
 						Value: true,
 					},
-					Consequence: &ast.Boolean{
+					Consequence: ast.Boolean{
 						Value: true,
 					},
-					Alternative: &ast.Boolean{
+					Alternative: ast.Boolean{
 						Value: false,
 					},
 				},
@@ -78,8 +79,8 @@ func TestParse(t *testing.T) {
 		{
 			name:  "parenthesized expression",
 			input: "(true)",
-			want: &ast.ExprStmt{
-				Expr: &ast.Boolean{
+			want: ast.ExprStmt{
+				Expr: ast.Boolean{
 					Value: true,
 				},
 			},
@@ -87,12 +88,12 @@ func TestParse(t *testing.T) {
 		{
 			name:  "let declaration",
 			input: "let x = 5",
-			want: &ast.DeclStmt{
-				Decl: &ast.LetDecl{
+			want: ast.DeclStmt{
+				Decl: ast.LetDecl{
 					Id: ast.Identifier{
 						Value: "x",
 					},
-					Expr: &ast.Integer{
+					Expr: ast.Integer{
 						Value: 5,
 					},
 				},
@@ -101,20 +102,20 @@ func TestParse(t *testing.T) {
 		{
 			name:  "let expression",
 			input: "let x = 2 in x + 3",
-			want: &ast.ExprStmt{
-				Expr: &ast.LetExpr{
+			want: ast.ExprStmt{
+				Expr: ast.LetExpr{
 					Id: ast.Identifier{
 						Value: "x",
 					},
-					BindingExpr: &ast.Integer{
+					BindingExpr: ast.Integer{
 						Value: 2,
 					},
-					BodyExpr: &ast.BinOpExpr{
+					BodyExpr: ast.BinOpExpr{
 						Op: token.PLUS,
-						Left: &ast.Identifier{
+						Left: ast.Identifier{
 							Value: "x",
 						},
-						Right: &ast.Integer{
+						Right: ast.Integer{
 							Value: 3,
 						},
 					},
@@ -124,17 +125,17 @@ func TestParse(t *testing.T) {
 		{
 			name:  "function declaration",
 			input: "fun x -> x + 3",
-			want: &ast.ExprStmt{
-				Expr: &ast.FunExpr{
+			want: ast.ExprStmt{
+				Expr: ast.FunExpr{
 					Param: ast.Identifier{
 						Value: "x",
 					},
-					BodyExpr: &ast.BinOpExpr{
+					BodyExpr: ast.BinOpExpr{
 						Op: token.PLUS,
-						Left: &ast.Identifier{
+						Left: ast.Identifier{
 							Value: "x",
 						},
-						Right: &ast.Integer{
+						Right: ast.Integer{
 							Value: 3,
 						},
 					},
@@ -144,23 +145,23 @@ func TestParse(t *testing.T) {
 		{
 			name:  "function application",
 			input: "(fun x -> x + 3 ) 2",
-			want: &ast.ExprStmt{
-				Expr: &ast.AppExpr{
-					Function: &ast.FunExpr{
+			want: ast.ExprStmt{
+				Expr: ast.AppExpr{
+					Function: ast.FunExpr{
 						Param: ast.Identifier{
 							Value: "x",
 						},
-						BodyExpr: &ast.BinOpExpr{
+						BodyExpr: ast.BinOpExpr{
 							Op: token.PLUS,
-							Left: &ast.Identifier{
+							Left: ast.Identifier{
 								Value: "x",
 							},
-							Right: &ast.Integer{
+							Right: ast.Integer{
 								Value: 3,
 							},
 						},
 					},
-					Argument: &ast.Integer{
+					Argument: ast.Integer{
 						Value: 2,
 					},
 				},
@@ -169,21 +170,21 @@ func TestParse(t *testing.T) {
 		{
 			name:  "nested function declaration",
 			input: "fun x -> (fun y -> x + y)",
-			want: &ast.ExprStmt{
-				Expr: &ast.FunExpr{
+			want: ast.ExprStmt{
+				Expr: ast.FunExpr{
 					Param: ast.Identifier{
 						Value: "x",
 					},
-					BodyExpr: &ast.FunExpr{
+					BodyExpr: ast.FunExpr{
 						Param: ast.Identifier{
 							Value: "y",
 						},
-						BodyExpr: &ast.BinOpExpr{
+						BodyExpr: ast.BinOpExpr{
 							Op: token.PLUS,
-							Left: &ast.Identifier{
+							Left: ast.Identifier{
 								Value: "x",
 							},
-							Right: &ast.Identifier{
+							Right: ast.Identifier{
 								Value: "y",
 							},
 						},
@@ -194,28 +195,28 @@ func TestParse(t *testing.T) {
 		{
 			name:  "nested function application",
 			input: "(fun x -> (fun y -> x + y)) 2",
-			want: &ast.ExprStmt{
-				Expr: &ast.AppExpr{
-					Function: &ast.FunExpr{
+			want: ast.ExprStmt{
+				Expr: ast.AppExpr{
+					Function: ast.FunExpr{
 						Param: ast.Identifier{
 							Value: "x",
 						},
-						BodyExpr: &ast.FunExpr{
+						BodyExpr: ast.FunExpr{
 							Param: ast.Identifier{
 								Value: "y",
 							},
-							BodyExpr: &ast.BinOpExpr{
+							BodyExpr: ast.BinOpExpr{
 								Op: token.PLUS,
-								Left: &ast.Identifier{
+								Left: ast.Identifier{
 									Value: "x",
 								},
-								Right: &ast.Identifier{
+								Right: ast.Identifier{
 									Value: "y",
 								},
 							},
 						},
 					},
-					Argument: &ast.Integer{
+					Argument: ast.Integer{
 						Value: 2,
 					},
 				},
@@ -224,42 +225,42 @@ func TestParse(t *testing.T) {
 		{
 			name:  "recursive function declaration",
 			input: "let rec f = fun n -> if n < 10 then 1 else n * f (n + 1)",
-			want: &ast.DeclStmt{
-				Decl: &ast.RecDecl{
+			want: ast.DeclStmt{
+				Decl: ast.RecDecl{
 					Id: ast.Identifier{
 						Value: "f",
 					},
 					Param: ast.Identifier{
 						Value: "n",
 					},
-					BodyExpr: &ast.IfExpr{
-						Condition: &ast.BinOpExpr{
+					BodyExpr: ast.IfExpr{
+						Condition: ast.BinOpExpr{
 							Op: token.LT,
-							Left: &ast.Identifier{
+							Left: ast.Identifier{
 								Value: "n",
 							},
-							Right: &ast.Integer{
+							Right: ast.Integer{
 								Value: 10,
 							},
 						},
-						Consequence: &ast.Integer{
+						Consequence: ast.Integer{
 							Value: 1,
 						},
-						Alternative: &ast.BinOpExpr{
+						Alternative: ast.BinOpExpr{
 							Op: token.ASTERISK,
-							Left: &ast.Identifier{
+							Left: ast.Identifier{
 								Value: "n",
 							},
-							Right: &ast.AppExpr{
-								Function: &ast.Identifier{
+							Right: ast.AppExpr{
+								Function: ast.Identifier{
 									Value: "f",
 								},
-								Argument: &ast.BinOpExpr{
+								Argument: ast.BinOpExpr{
 									Op: token.PLUS,
-									Left: &ast.Identifier{
+									Left: ast.Identifier{
 										Value: "n",
 									},
-									Right: &ast.Integer{
+									Right: ast.Integer{
 										Value: 1,
 									},
 								},
@@ -272,53 +273,53 @@ func TestParse(t *testing.T) {
 		{
 			name:  "recursive function expression",
 			input: "let rec fact = fun n -> if n < 1 then 1 else n * (fact (n + 1)) in fact 5",
-			want: &ast.ExprStmt{
-				Expr: &ast.LetRecExpr{
+			want: ast.ExprStmt{
+				Expr: ast.LetRecExpr{
 					Id: ast.Identifier{
 						Value: "fact",
 					},
 					Param: ast.Identifier{
 						Value: "n",
 					},
-					BindingExpr: &ast.IfExpr{
-						Condition: &ast.BinOpExpr{
+					BindingExpr: ast.IfExpr{
+						Condition: ast.BinOpExpr{
 							Op: token.LT,
-							Left: &ast.Identifier{
+							Left: ast.Identifier{
 								Value: "n",
 							},
-							Right: &ast.Integer{
+							Right: ast.Integer{
 								Value: 1,
 							},
 						},
-						Consequence: &ast.Integer{
+						Consequence: ast.Integer{
 							Value: 1,
 						},
-						Alternative: &ast.BinOpExpr{
+						Alternative: ast.BinOpExpr{
 							Op: token.ASTERISK,
-							Left: &ast.Identifier{
+							Left: ast.Identifier{
 								Value: "n",
 							},
-							Right: &ast.AppExpr{
-								Function: &ast.Identifier{
+							Right: ast.AppExpr{
+								Function: ast.Identifier{
 									Value: "fact",
 								},
-								Argument: &ast.BinOpExpr{
+								Argument: ast.BinOpExpr{
 									Op: token.PLUS,
-									Left: &ast.Identifier{
+									Left: ast.Identifier{
 										Value: "n",
 									},
-									Right: &ast.Integer{
+									Right: ast.Integer{
 										Value: 1,
 									},
 								},
 							},
 						},
 					},
-					BodyExpr: &ast.AppExpr{
-						Function: &ast.Identifier{
+					BodyExpr: ast.AppExpr{
+						Function: ast.Identifier{
 							Value: "fact",
 						},
-						Argument: &ast.Integer{
+						Argument: ast.Integer{
 							Value: 5,
 						},
 					},
@@ -332,7 +333,7 @@ func TestParse(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := Parse(tc.input)
+			got := parser.Parse(tc.input)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("Parse(%q) returned unexpected difference (-want +got):\n%s", tc.input, diff)
