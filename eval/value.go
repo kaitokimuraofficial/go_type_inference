@@ -22,6 +22,6 @@ type (
 	}
 )
 
-func (*Integer) value()  {}
-func (*Boolean) value()  {}
-func (*Function) value() {}
+func (Integer) value()  {}
+func (Boolean) value()  {}
+func (Function) value() {}
