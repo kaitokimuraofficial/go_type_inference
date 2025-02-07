@@ -1,17 +1,22 @@
 package typing
 
-import "go_type_inference/ast"
+import (
+	"go_type_inference/ast"
+)
 
 type Environment struct {
-	Store map[ast.Identifier]Scheme
+	Store map[Variable]Type
+
+	nextKey Variable
 }
 
-func (e *Environment) Get(k ast.Identifier) (Scheme, bool) {
+func (e Environment) Get(k ast.Ident) (Type, bool) {
+
 	obj, ok := e.Store[k]
 	return obj, ok
 }
 
-func (e *Environment) Set(k ast.Identifier, v Scheme) Scheme {
-	e.Store[k] = v
-	return v
+func (e Environment) Set(k ast.Ident, t Type) Type {
+	e.Store[k] = t
+	return t
 }
