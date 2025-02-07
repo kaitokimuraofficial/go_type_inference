@@ -28,10 +28,10 @@ import (
 %type<expr> appexpr
 %type<expr> aexpr
 
-%token<token> IDENT INT /* Identifier */
-%token<token> ASSIGN ASTERISK LT PLUS /* Operator */
-%token<token> LPAREN RPAREN RARROW SEMISEMI /* Delimiter */
-%token<token> ELSE FALSE FUN IF IN LET THEN TRUE REC /* Keyword */
+%token<token> IDENT INT                                 /* Identifier */
+%token<token> ASSIGN ASTERISK LT PLUS                   /* Operator */
+%token<token> LPAREN RPAREN RARROW SEMISEMI             /* Delimiter */
+%token<token> ELSE FALSE FUN IF IN LET THEN TRUE REC    /* Keyword */
 
 %%
 
