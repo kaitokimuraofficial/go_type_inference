@@ -127,12 +127,12 @@ func TestEval(t *testing.T) {
 			name:  "function declaration",
 			input: "fun y -> y + 3",
 			want: eval.Function{
-				Param: ast.Identifier{
+				Param: ast.Ident{
 					Value: "y",
 				},
 				Body: ast.BinOpExpr{
 					Op: token.PLUS,
-					Left: ast.Identifier{
+					Left: ast.Ident{
 						Value: "y",
 					},
 					Right: ast.Integer{
@@ -140,7 +140,7 @@ func TestEval(t *testing.T) {
 					},
 				},
 				Env: eval.Environment{
-					Store: map[ast.Identifier]eval.Value{
+					Store: map[ast.Ident]eval.Value{
 						{Value: "i"}: eval.Integer{Value: 1},
 						{Value: "v"}: eval.Integer{Value: 5},
 						{Value: "x"}: eval.Integer{Value: 10},
@@ -166,20 +166,20 @@ func TestEval(t *testing.T) {
 			name:  "nested function application given one argument",
 			input: "(fun x -> (fun y -> x + y)) 2",
 			want: eval.Function{
-				Param: ast.Identifier{
+				Param: ast.Ident{
 					Value: "y",
 				},
 				Body: ast.BinOpExpr{
 					Op: token.PLUS,
-					Left: ast.Identifier{
+					Left: ast.Ident{
 						Value: "x",
 					},
-					Right: ast.Identifier{
+					Right: ast.Ident{
 						Value: "y",
 					},
 				},
 				Env: eval.Environment{
-					Store: map[ast.Identifier]eval.Value{
+					Store: map[ast.Ident]eval.Value{
 						{Value: "i"}: eval.Integer{Value: 1},
 						{Value: "v"}: eval.Integer{Value: 5},
 						{Value: "x"}: eval.Integer{Value: 2},
@@ -198,34 +198,34 @@ func TestEval(t *testing.T) {
 			name:  "recursive function declaration",
 			input: "let rec f = fun n -> (if 10 < n then 1 else n * f (n + 1))",
 			want: eval.Function{
-				Param: ast.Identifier{
+				Param: ast.Ident{
 					Value: "n",
 				},
 				Body: ast.IfExpr{
-					Condition: ast.BinOpExpr{
+					Cond: ast.BinOpExpr{
 						Op: token.LT,
 						Left: ast.Integer{
 							Value: 10,
 						},
-						Right: ast.Identifier{
+						Right: ast.Ident{
 							Value: "n",
 						},
 					},
-					Consequence: ast.Integer{
+					Cons: ast.Integer{
 						Value: 1,
 					},
-					Alternative: ast.BinOpExpr{
+					Alt: ast.BinOpExpr{
 						Op: token.ASTERISK,
-						Left: ast.Identifier{
+						Left: ast.Ident{
 							Value: "n",
 						},
 						Right: ast.AppExpr{
-							Function: ast.Identifier{
+							Func: ast.Ident{
 								Value: "f",
 							},
-							Argument: ast.BinOpExpr{
+							Arg: ast.BinOpExpr{
 								Op: token.PLUS,
-								Left: ast.Identifier{
+								Left: ast.Ident{
 									Value: "n",
 								},
 								Right: ast.Integer{
@@ -236,7 +236,7 @@ func TestEval(t *testing.T) {
 					},
 				},
 				Env: eval.Environment{
-					Store: map[ast.Identifier]eval.Value{},
+					Store: map[ast.Ident]eval.Value{},
 				},
 			},
 		},
@@ -252,10 +252,10 @@ func TestEval(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 
-		env := eval.Environment{Store: make(map[ast.Identifier]eval.Value)}
-		env.Set(ast.Identifier{Value: "i"}, eval.Integer{Value: 1})
-		env.Set(ast.Identifier{Value: "v"}, eval.Integer{Value: 5})
-		env.Set(ast.Identifier{Value: "x"}, eval.Integer{Value: 10})
+		env := eval.Environment{Store: make(map[ast.Ident]eval.Value)}
+		env.Set(ast.Ident{Value: "i"}, eval.Integer{Value: 1})
+		env.Set(ast.Ident{Value: "v"}, eval.Integer{Value: 5})
+		env.Set(ast.Ident{Value: "x"}, eval.Integer{Value: 10})
 
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()

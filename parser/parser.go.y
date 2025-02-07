@@ -43,12 +43,12 @@ statement
     }
     | LET IDENT ASSIGN expr SEMISEMI
     {
-        $$ = ast.DeclStmt{Decl: ast.LetDecl{Id: ast.Identifier{Value: $2.Literal}, Expr: $4}}
+        $$ = ast.DeclStmt{Decl: ast.LetDecl{Id: ast.Ident{Value: $2.Literal}, Expr: $4}}
         yylex.(*LexerWrapper).Result = $$
     }
     | LET REC IDENT ASSIGN FUN IDENT RARROW expr SEMISEMI
     {
-        $$ = ast.DeclStmt{Decl: ast.RecDecl{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BodyExpr: $8}}
+        $$ = ast.DeclStmt{Decl: ast.RecDecl{Id: ast.Ident{Value: $3.Literal}, Param: ast.Ident{Value: $6.Literal}, Body: $8}}
         yylex.(*LexerWrapper).Result = $$
     }
 
@@ -87,25 +87,25 @@ ltexpr
 ifexpr
     : IF expr THEN expr ELSE expr
     {
-        $$ = ast.IfExpr{Condition: $2, Consequence: $4, Alternative: $6}
+        $$ = ast.IfExpr{Cond: $2, Cons: $4, Alt: $6}
     }
 
 letexpr
     : LET IDENT ASSIGN expr IN expr
     {
-        $$ = ast.LetExpr{Id: ast.Identifier{Value: $2.Literal}, BindingExpr: $4, BodyExpr: $6}
+        $$ = ast.LetExpr{Id: ast.Ident{Value: $2.Literal}, Bind: $4, Body: $6}
     }
 
 funexpr
     : FUN IDENT RARROW expr
     {
-        $$ = ast.FunExpr{Param: ast.Identifier{Value: $2.Literal}, BodyExpr: $4}
+        $$ = ast.FunExpr{Param: ast.Ident{Value: $2.Literal}, Body: $4}
     }
 
 letrecexpr
     : LET REC IDENT ASSIGN FUN IDENT RARROW expr IN expr
     {
-        $$ = ast.LetRecExpr{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BindingExpr: $8, BodyExpr: $10}
+        $$ = ast.LetRecExpr{Id: ast.Ident{Value: $3.Literal}, Param: ast.Ident{Value: $6.Literal}, Bind: $8, Body: $10}
     }
 
 pexpr
@@ -135,7 +135,7 @@ appexpr
     }
     | appexpr aexpr
     {
-        $$ = ast.AppExpr{Function: $1, Argument: $2}
+        $$ = ast.AppExpr{Func: $1, Arg: $2}
     }
 
 aexpr
@@ -158,7 +158,7 @@ aexpr
     }
     | IDENT
     {
-        $$ = ast.Identifier{Value: $1.Literal}
+        $$ = ast.Ident{Value: $1.Literal}
     }
     | LPAREN expr RPAREN
     {

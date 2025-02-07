@@ -575,14 +575,14 @@ yydefault:
 		yyDollar = yyS[yypt-5 : yypt+1]
 //line parser/parser.go.y:45
 		{
-			yyVAL.statement = ast.DeclStmt{Decl: ast.LetDecl{Id: ast.Identifier{Value: yyDollar[2].token.Literal}, Expr: yyDollar[4].expr}}
+			yyVAL.statement = ast.DeclStmt{Decl: ast.LetDecl{Id: ast.Ident{Value: yyDollar[2].token.Literal}, Expr: yyDollar[4].expr}}
 			yylex.(*LexerWrapper).Result = yyVAL.statement
 		}
 	case 3:
 		yyDollar = yyS[yypt-9 : yypt+1]
 //line parser/parser.go.y:50
 		{
-			yyVAL.statement = ast.DeclStmt{Decl: ast.RecDecl{Id: ast.Identifier{Value: yyDollar[3].token.Literal}, Param: ast.Identifier{Value: yyDollar[6].token.Literal}, BodyExpr: yyDollar[8].expr}}
+			yyVAL.statement = ast.DeclStmt{Decl: ast.RecDecl{Id: ast.Ident{Value: yyDollar[3].token.Literal}, Param: ast.Ident{Value: yyDollar[6].token.Literal}, Body: yyDollar[8].expr}}
 			yylex.(*LexerWrapper).Result = yyVAL.statement
 		}
 	case 4:
@@ -631,25 +631,25 @@ yydefault:
 		yyDollar = yyS[yypt-6 : yypt+1]
 //line parser/parser.go.y:89
 		{
-			yyVAL.expr = ast.IfExpr{Condition: yyDollar[2].expr, Consequence: yyDollar[4].expr, Alternative: yyDollar[6].expr}
+			yyVAL.expr = ast.IfExpr{Cond: yyDollar[2].expr, Cons: yyDollar[4].expr, Alt: yyDollar[6].expr}
 		}
 	case 12:
 		yyDollar = yyS[yypt-6 : yypt+1]
 //line parser/parser.go.y:95
 		{
-			yyVAL.expr = ast.LetExpr{Id: ast.Identifier{Value: yyDollar[2].token.Literal}, BindingExpr: yyDollar[4].expr, BodyExpr: yyDollar[6].expr}
+			yyVAL.expr = ast.LetExpr{Id: ast.Ident{Value: yyDollar[2].token.Literal}, Bind: yyDollar[4].expr, Body: yyDollar[6].expr}
 		}
 	case 13:
 		yyDollar = yyS[yypt-4 : yypt+1]
 //line parser/parser.go.y:101
 		{
-			yyVAL.expr = ast.FunExpr{Param: ast.Identifier{Value: yyDollar[2].token.Literal}, BodyExpr: yyDollar[4].expr}
+			yyVAL.expr = ast.FunExpr{Param: ast.Ident{Value: yyDollar[2].token.Literal}, Body: yyDollar[4].expr}
 		}
 	case 14:
 		yyDollar = yyS[yypt-10 : yypt+1]
 //line parser/parser.go.y:107
 		{
-			yyVAL.expr = ast.LetRecExpr{Id: ast.Identifier{Value: yyDollar[3].token.Literal}, Param: ast.Identifier{Value: yyDollar[6].token.Literal}, BindingExpr: yyDollar[8].expr, BodyExpr: yyDollar[10].expr}
+			yyVAL.expr = ast.LetRecExpr{Id: ast.Ident{Value: yyDollar[3].token.Literal}, Param: ast.Ident{Value: yyDollar[6].token.Literal}, Bind: yyDollar[8].expr, Body: yyDollar[10].expr}
 		}
 	case 15:
 		yyDollar = yyS[yypt-1 : yypt+1]
@@ -685,7 +685,7 @@ yydefault:
 		yyDollar = yyS[yypt-2 : yypt+1]
 //line parser/parser.go.y:137
 		{
-			yyVAL.expr = ast.AppExpr{Function: yyDollar[1].expr, Argument: yyDollar[2].expr}
+			yyVAL.expr = ast.AppExpr{Func: yyDollar[1].expr, Arg: yyDollar[2].expr}
 		}
 	case 21:
 		yyDollar = yyS[yypt-1 : yypt+1]
@@ -714,7 +714,7 @@ yydefault:
 		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser/parser.go.y:160
 		{
-			yyVAL.expr = ast.Identifier{Value: yyDollar[1].token.Literal}
+			yyVAL.expr = ast.Ident{Value: yyDollar[1].token.Literal}
 		}
 	case 25:
 		yyDollar = yyS[yypt-3 : yypt+1]

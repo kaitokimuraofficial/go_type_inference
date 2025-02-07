@@ -2,28 +2,28 @@ package ast
 
 import "go_type_inference/token"
 
-type Node interface {
-	node()
-}
+type (
+	Node interface {
+		node()
+	}
 
-type Expr interface {
-	Node
-	exprNode()
-}
+	Expr interface {
+		Node
+		exprNode()
+	}
 
-type Stmt interface {
-	Node
-	stmtNode()
-}
+	Stmt interface {
+		Node
+		stmtNode()
+	}
 
-type Decl interface {
-	Node
-	declNode()
-}
+	Decl interface {
+		Node
+		declNode()
+	}
+)
 
-// ----------------------------------------------------------------------------
 // Expressions
-
 type (
 	Integer struct {
 		Value int
@@ -33,7 +33,7 @@ type (
 		Value bool
 	}
 
-	Identifier struct {
+	Ident struct {
 		Value string
 	}
 
@@ -44,38 +44,38 @@ type (
 	}
 
 	IfExpr struct {
-		Condition   Expr
-		Consequence Expr
-		Alternative Expr
+		Cond Expr
+		Cons Expr
+		Alt  Expr
 	}
 
 	LetExpr struct {
-		Id          Identifier
-		BindingExpr Expr
-		BodyExpr    Expr
+		Id   Ident
+		Bind Expr
+		Body Expr
 	}
 
 	FunExpr struct {
-		Param    Identifier
-		BodyExpr Expr
+		Param Ident
+		Body  Expr
 	}
 
 	AppExpr struct {
-		Function Expr
-		Argument Expr
+		Func Expr
+		Arg  Expr
 	}
 
 	LetRecExpr struct {
-		Id          Identifier
-		Param       Identifier
-		BindingExpr Expr
-		BodyExpr    Expr
+		Id    Ident
+		Param Ident
+		Bind  Expr
+		Body  Expr
 	}
 )
 
 func (Integer) node()    {}
 func (Boolean) node()    {}
-func (Identifier) node() {}
+func (Ident) node()      {}
 func (BinOpExpr) node()  {}
 func (IfExpr) node()     {}
 func (LetExpr) node()    {}
@@ -83,11 +83,9 @@ func (FunExpr) node()    {}
 func (AppExpr) node()    {}
 func (LetRecExpr) node() {}
 
-// exprNode() ensures that only expression nodes can be
-// assigned to an Expr
 func (Integer) exprNode()    {}
 func (Boolean) exprNode()    {}
-func (Identifier) exprNode() {}
+func (Ident) exprNode()      {}
 func (BinOpExpr) exprNode()  {}
 func (IfExpr) exprNode()     {}
 func (LetExpr) exprNode()    {}
@@ -95,9 +93,7 @@ func (FunExpr) exprNode()    {}
 func (AppExpr) exprNode()    {}
 func (LetRecExpr) exprNode() {}
 
-// ----------------------------------------------------------------------------
 // Statements
-
 type (
 	DeclStmt struct {
 		Decl Decl
@@ -111,31 +107,25 @@ type (
 func (DeclStmt) node() {}
 func (ExprStmt) node() {}
 
-// stmtNode() ensures that only statement nodes can be
-// assigned to a Stmt.
 func (DeclStmt) stmtNode() {}
 func (ExprStmt) stmtNode() {}
 
-// ----------------------------------------------------------------------------
 // Declarations
-
 type (
 	LetDecl struct {
-		Id   Identifier
+		Id   Ident
 		Expr Expr
 	}
 
 	RecDecl struct {
-		Id       Identifier
-		Param    Identifier
-		BodyExpr Expr
+		Id    Ident
+		Param Ident
+		Body  Expr
 	}
 )
 
 func (LetDecl) node() {}
 func (RecDecl) node() {}
 
-// declNode() ensures that only declaration nodes can be
-// assigned to a Decl.
 func (LetDecl) declNode() {}
 func (RecDecl) declNode() {}

@@ -190,15 +190,15 @@ func TestInfer(t *testing.T) {
 		tc := tc
 
 		env := typing.Environment{Store: make(map[typing.Variable]typing.Type)}
-		env.Set(ast.Identifier{Value: "b"}, typing.TyScheme{
+		env.Set(ast.Ident{Value: "b"}, typing.TyScheme{
 			BoundVars: []typing.Variable{},
 			Type:      typing.TyInt{},
 		})
-		env.Set(ast.Identifier{Value: "i"}, typing.TyScheme{
+		env.Set(ast.Ident{Value: "i"}, typing.TyScheme{
 			BoundVars: []typing.Variable{},
 			Type:      typing.TyInt{},
 		})
-		env.Set(ast.Identifier{Value: "v"}, typing.TyScheme{
+		env.Set(ast.Ident{Value: "v"}, typing.TyScheme{
 			BoundVars: []typing.Variable{},
 			Type:      typing.TyInt{},
 		})

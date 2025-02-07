@@ -16,7 +16,7 @@ type (
 	}
 
 	Function struct {
-		Param ast.Identifier
+		Param ast.Ident
 		Body  ast.Expr
 		Env   Environment
 	}

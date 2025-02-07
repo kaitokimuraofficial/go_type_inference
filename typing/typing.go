@@ -20,7 +20,7 @@ func Infer(node ast.Node, env Environment) ([]Substitution, Type) {
 		return []Substitution{}, TyInt{}
 	case ast.Boolean:
 		return []Substitution{}, TyBool{}
-	case ast.Identifier:
+	case ast.Ident:
 		return inferIdentifier(n, env)
 	case ast.BinOpExpr:
 		return inferBinOpExpr(n, env)
@@ -48,7 +48,7 @@ func inferLetDecl(d ast.LetDecl, env Environment) ([]Substitution, Type) {
 	sch := NewScheme(typ)
 	for _, v := range typ.Variables() {
 		vs := strconv.Itoa(int(v))
-		if _, ok := env.Get(ast.Identifier{Value: vs}); !ok {
+		if _, ok := env.Get(ast.Ident{Value: vs}); !ok {
 			sch.BoundVars = append(sch.BoundVars, v)
 		}
 	}
@@ -57,7 +57,7 @@ func inferLetDecl(d ast.LetDecl, env Environment) ([]Substitution, Type) {
 	return []Substitution{}, sch.Type
 }
 
-func inferIdentifier(i ast.Identifier, env Environment) ([]Substitution, Type) {
+func inferIdentifier(i ast.Ident, env Environment) ([]Substitution, Type) {
 	sch, ok := env.Get(i)
 	if !ok {
 		log.Fatalf("variable %q is not bound", i.Value)
@@ -135,9 +135,9 @@ func inferPrimitive(op token.Type, left Type, right Type) ([]Constraint, Type) {
 }
 
 func inferIfExpr(e ast.IfExpr, env Environment) ([]Substitution, Type) {
-	s1, t1 := Infer(e.Condition, env)
-	s2, t2 := Infer(e.Consequence, env)
-	s3, t3 := Infer(e.Alternative, env)
+	s1, t1 := Infer(e.Cond, env)
+	s2, t2 := Infer(e.Cons, env)
+	s3, t3 := Infer(e.Alt, env)
 
 	cs1 := []Constraint{
 		{
@@ -161,7 +161,7 @@ func inferIfExpr(e ast.IfExpr, env Environment) ([]Substitution, Type) {
 }
 
 func inferLetExpr(e ast.LetExpr, env Environment) ([]Substitution, Type) {
-	s1, t1 := Infer(e.BindingExpr, env)
+	s1, t1 := Infer(e.Bind, env)
 	cs := ConvertTo(s1)
 	subst := Unify(cs)
 
@@ -169,13 +169,13 @@ func inferLetExpr(e ast.LetExpr, env Environment) ([]Substitution, Type) {
 	sch := NewScheme(bindingTyp)
 	for _, v := range bindingTyp.Variables() {
 		vs := strconv.Itoa(int(v))
-		if _, ok := env.Get(ast.Identifier{Value: vs}); !ok {
+		if _, ok := env.Get(ast.Ident{Value: vs}); !ok {
 			sch.BoundVars = append(sch.BoundVars, v)
 		}
 	}
 
 	env.Set(e.Id, sch)
-	s2, t2 := Infer(e.BodyExpr, env)
+	s2, t2 := Infer(e.Body, env)
 
 	newCS := Union(ConvertTo(s1), ConvertTo(s2))
 
@@ -188,14 +188,14 @@ func inferFunExpr(e ast.FunExpr, env Environment) ([]Substitution, Type) {
 	freshIdent := NewFreshTyVar()
 	env.Set(e.Param, NewScheme(freshIdent))
 
-	s, t := Infer(e.BodyExpr, env)
+	s, t := Infer(e.Body, env)
 
 	return s, TyFun{Abs: Substitute(s, freshIdent), App: t}
 }
 
 func inferAppExpr(e ast.AppExpr, env Environment) ([]Substitution, Type) {
-	s1, t1 := Infer(e.Function, env)
-	s2, t2 := Infer(e.Argument, env)
+	s1, t1 := Infer(e.Func, env)
+	s2, t2 := Infer(e.Arg, env)
 
 	freshIdent := NewFreshTyVar()
 

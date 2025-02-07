@@ -20,7 +20,7 @@ func Eval(node ast.Node, env Environment) Value {
 		return Integer{Value: n.Value}
 	case ast.Boolean:
 		return Boolean{Value: n.Value}
-	case ast.Identifier:
+	case ast.Ident:
 		return evalIdentifier(n, env)
 	case ast.BinOpExpr:
 		return evalBinOpExpr(n, env)
@@ -29,7 +29,7 @@ func Eval(node ast.Node, env Environment) Value {
 	case ast.LetExpr:
 		return evalLetExpr(n, env)
 	case ast.FunExpr:
-		return Function{Param: n.Param, Body: n.BodyExpr, Env: env}
+		return Function{Param: n.Param, Body: n.Body, Env: env}
 	case ast.AppExpr:
 		return evalAppExpr(n, env)
 	case ast.LetRecExpr:
@@ -48,13 +48,13 @@ func evalLetDecl(d ast.LetDecl, env Environment) Value {
 }
 
 func evalRecDecl(d ast.RecDecl, env Environment) Value {
-	emptyEnv := Environment{Store: make(map[ast.Identifier]Value)}
-	f := Function{Param: d.Param, Body: d.BodyExpr, Env: emptyEnv}
+	emptyEnv := Environment{Store: make(map[ast.Ident]Value)}
+	f := Function{Param: d.Param, Body: d.Body, Env: emptyEnv}
 	env.Set(d.Id, f)
 	return f
 }
 
-func evalIdentifier(i ast.Identifier, env Environment) Value {
+func evalIdentifier(i ast.Ident, env Environment) Value {
 	val, ok := env.Get(i)
 	if !ok {
 		log.Fatalf("variable %q is not bound", i.Value)
@@ -90,27 +90,27 @@ func evalBinOpExpr(e ast.BinOpExpr, env Environment) Value {
 }
 
 func evalIfExpr(e ast.IfExpr, env Environment) Value {
-	v, ok := Eval(e.Condition, env).(Boolean)
+	v, ok := Eval(e.Cond, env).(Boolean)
 	if !ok {
 		log.Fatal("condition is not Boolean")
 	}
 
 	if v.Value {
-		return Eval(e.Consequence, env)
+		return Eval(e.Cons, env)
 	}
 
-	return Eval(e.Alternative, env)
+	return Eval(e.Alt, env)
 }
 
 func evalLetExpr(e ast.LetExpr, env Environment) Value {
-	v := Eval(e.BindingExpr, env)
+	v := Eval(e.Bind, env)
 	env.Set(e.Id, v)
-	return Eval(e.BodyExpr, env)
+	return Eval(e.Body, env)
 }
 
 func evalAppExpr(e ast.AppExpr, env Environment) Value {
-	fn := Eval(e.Function, env)
-	arg := Eval(e.Argument, env)
+	fn := Eval(e.Func, env)
+	arg := Eval(e.Arg, env)
 
 	v, ok := fn.(Function)
 	if !ok {
@@ -122,8 +122,8 @@ func evalAppExpr(e ast.AppExpr, env Environment) Value {
 }
 
 func evalLetRecExpr(e ast.LetRecExpr, env Environment) Value {
-	emptyEnv := Environment{Store: make(map[ast.Identifier]Value)}
-	f := Function{Param: e.Param, Body: e.BindingExpr, Env: emptyEnv}
+	emptyEnv := Environment{Store: make(map[ast.Ident]Value)}
+	f := Function{Param: e.Param, Body: e.Bind, Env: emptyEnv}
 	env.Set(e.Id, f)
-	return Eval(e.BodyExpr, env)
+	return Eval(e.Body, env)
 }
