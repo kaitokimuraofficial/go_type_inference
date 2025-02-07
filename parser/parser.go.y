@@ -28,29 +28,25 @@ import (
 %type<expr> appexpr
 %type<expr> aexpr
 
-%token<token> IDENT
-%token<token> INT TRUE FALSE
-%token<token> LPAREN RPAREN
-%token<token> IF THEN ELSE
-%token<token> LT PLUS ASTERISK
-%token<token> LET ASSIGN IN
-%token<token> RARROW FUN
-%token<token> REC
+%token<token> IDENT INT /* Identifier */
+%token<token> ASSIGN ASTERISK LT PLUS /* Operator */
+%token<token> LPAREN RPAREN RARROW SEMISEMI /* Delimiter */
+%token<token> ELSE FALSE FUN IF IN LET THEN TRUE REC /* Keyword */
 
 %%
 
 statement
-    : expr
+    : expr SEMISEMI
     {
         $$ = ast.ExprStmt{Expr: $1}
         yylex.(*LexerWrapper).Result = $$
     }
-    | LET IDENT ASSIGN expr
+    | LET IDENT ASSIGN expr SEMISEMI
     {
         $$ = ast.DeclStmt{Decl: ast.LetDecl{Id: ast.Identifier{Value: $2.Literal}, Expr: $4}}
         yylex.(*LexerWrapper).Result = $$
     }
-    | LET REC IDENT ASSIGN FUN IDENT RARROW expr
+    | LET REC IDENT ASSIGN FUN IDENT RARROW expr SEMISEMI
     {
         $$ = ast.DeclStmt{Decl: ast.RecDecl{Id: ast.Identifier{Value: $3.Literal}, Param: ast.Identifier{Value: $6.Literal}, BodyExpr: $8}}
         yylex.(*LexerWrapper).Result = $$
@@ -197,6 +193,8 @@ func (lw *LexerWrapper) Lex(lval *yySymType) int {
         return PLUS
     case token.LT:
         return LT
+    case token.SEMISEMI:
+        return SEMISEMI
     case token.LPAREN:
         return LPAREN
     case token.RPAREN:
