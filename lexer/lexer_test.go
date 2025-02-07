@@ -17,7 +17,7 @@ func TestNextToken(t *testing.T) {
 		{
 			name: "example sentence",
 			input: `=*+()
-			=*4 ;true in let inlet fun -> rec
+			=*4 true in let inlet fun -> rec
 			;;
 			`,
 			want: []token.Token{
@@ -29,7 +29,6 @@ func TestNextToken(t *testing.T) {
 				{Type: token.ASSIGN, Literal: "="},
 				{Type: token.ASTERISK, Literal: "*"},
 				{Type: token.INT, Literal: "4"},
-				{Type: token.SEMI, Literal: ";"},
 				{Type: token.TRUE, Literal: "true"},
 				{Type: token.IN, Literal: "in"},
 				{Type: token.LET, Literal: "let"},
@@ -38,6 +37,16 @@ func TestNextToken(t *testing.T) {
 				{Type: token.RARROW, Literal: "->"},
 				{Type: token.REC, Literal: "rec"},
 				{Type: token.SEMISEMI, Literal: ";;"},
+				{Type: token.EOF, Literal: ""},
+			},
+		},
+		{
+			name:  "illegal sentence with -",
+			input: `push-back`,
+			want: []token.Token{
+				{Type: token.IDENT, Literal: "push"},
+				{Type: token.ILLEGAL, Literal: "-"},
+				{Type: token.IDENT, Literal: "back"},
 				{Type: token.EOF, Literal: ""},
 			},
 		},

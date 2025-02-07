@@ -15,18 +15,16 @@ const (
 	// Operator
 	ASSIGN   // =
 	ASTERISK // *
+	LT       // <
 	PLUS     // +
 
-	LT // <
-
 	// Delimiter
-	SEMI     // ;
-	SEMISEMI // ;;
-
 	LPAREN // (
 	RPAREN // )
 
 	RARROW // ->
+
+	SEMISEMI // ;;
 
 	// Keyword
 	ELSE
@@ -53,7 +51,6 @@ var tokens = [...]string{
 
 	LT: "<",
 
-	SEMI:     ";",
 	SEMISEMI: ";;",
 
 	LPAREN: "(",

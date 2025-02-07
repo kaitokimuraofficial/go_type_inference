@@ -36,7 +36,7 @@ func (l *Lexer) NextToken() token.Token {
 			literal := string(ch) + string(l.ch)
 			tok = token.Token{Type: token.SEMISEMI, Literal: literal}
 		} else {
-			tok = *token.New(token.SEMI, l.ch)
+			tok = *token.New(token.ILLEGAL, l.ch)
 		}
 	case '(':
 		tok = *token.New(token.LPAREN, l.ch)
