@@ -50,12 +50,8 @@ func TestConvert(t *testing.T) {
 		{
 			desc: "simple TyFun case",
 			typ: typing.TyFun{
-				Abs: typing.TyVar{
-					Variable: 1,
-				},
-				App: typing.TyVar{
-					Variable: 1,
-				},
+				Abs: typing.TyVar{Variable: 1},
+				App: typing.TyVar{Variable: 1},
 			},
 			frm: typing.TyVar{Variable: 1},
 			to:  typing.TyBool{},
@@ -69,36 +65,24 @@ func TestConvert(t *testing.T) {
 			typ: typing.TyFun{
 				Abs: typing.TyFun{
 					Abs: typing.TyFun{
-						Abs: typing.TyVar{
-							Variable: 3,
-						},
-						App: typing.TyVar{
-							Variable: 1,
-						},
+						Abs: typing.TyVar{Variable: 3},
+						App: typing.TyVar{Variable: 1},
 					},
-					App: typing.TyVar{
-						Variable: 1,
-					},
+					App: typing.TyVar{Variable: 1},
 				},
-				App: typing.TyVar{
-					Variable: 2,
-				},
+				App: typing.TyVar{Variable: 2},
 			},
 			frm: typing.TyVar{Variable: 1},
 			to:  typing.TyInt{},
 			want: typing.TyFun{
 				Abs: typing.TyFun{
 					Abs: typing.TyFun{
-						Abs: typing.TyVar{
-							Variable: 3,
-						},
+						Abs: typing.TyVar{Variable: 3},
 						App: typing.TyInt{},
 					},
 					App: typing.TyInt{},
 				},
-				App: typing.TyVar{
-					Variable: 2,
-				},
+				App: typing.TyVar{Variable: 2},
 			},
 		},
 	}
@@ -161,16 +145,10 @@ func TestVariables(t *testing.T) {
 			typ: typing.TyFun{
 				Abs: typing.TyFun{
 					Abs: typing.TyFun{
-						Abs: typing.TyVar{
-							Variable: 3,
-						},
-						App: typing.TyVar{
-							Variable: 1,
-						},
+						Abs: typing.TyVar{Variable: 3},
+						App: typing.TyVar{Variable: 1},
 					},
-					App: typing.TyVar{
-						Variable: 1,
-					},
+					App: typing.TyVar{Variable: 1},
 				},
 				App: typing.TyVar{
 					Variable: 3,

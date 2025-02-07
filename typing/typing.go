@@ -67,7 +67,7 @@ func inferIdentifier(i ast.Ident, env Environment) ([]Substitution, Type) {
 	for _, boundVar := range sch.(TyScheme).BoundVars {
 		subst = append(subst, Substitution{
 			Variable: boundVar,
-			Type:     NewFreshTyVar(),
+			Type:     FreshTyVar(),
 		})
 	}
 
@@ -185,7 +185,7 @@ func inferLetExpr(e ast.LetExpr, env Environment) ([]Substitution, Type) {
 }
 
 func inferFunExpr(e ast.FunExpr, env Environment) ([]Substitution, Type) {
-	freshIdent := NewFreshTyVar()
+	freshIdent := FreshTyVar()
 	env.Set(e.Param, NewScheme(freshIdent))
 
 	s, t := Infer(e.Body, env)
@@ -197,7 +197,7 @@ func inferAppExpr(e ast.AppExpr, env Environment) ([]Substitution, Type) {
 	s1, t1 := Infer(e.Func, env)
 	s2, t2 := Infer(e.Arg, env)
 
-	freshIdent := NewFreshTyVar()
+	freshIdent := FreshTyVar()
 
 	cs := []Constraint{
 		{

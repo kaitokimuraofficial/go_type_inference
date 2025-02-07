@@ -5,7 +5,6 @@ import (
 	"slices"
 )
 
-// ----------------------------------------------------------------------------
 // Constraint
 
 // Constraint represents a set of constraints that the type must satisfy.
@@ -95,7 +94,6 @@ func replace(cs []Constraint, frm TyVar, to Type) []Constraint {
 	return replaced
 }
 
-// ----------------------------------------------------------------------------
 // Substitution
 
 // Substitution represents the mapping of type variables to their inferred results.
