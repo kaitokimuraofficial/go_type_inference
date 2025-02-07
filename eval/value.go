@@ -18,7 +18,7 @@ type (
 	Function struct {
 		Param ast.Ident
 		Body  ast.Expr
-		Env   Environment
+		Env   Env
 	}
 )
 

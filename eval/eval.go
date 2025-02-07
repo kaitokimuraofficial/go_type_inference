@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-func Eval(node ast.Node, env Environment) Value {
+func Eval(node ast.Node, env Env) Value {
 	switch n := node.(type) {
 	case ast.DeclStmt:
 		return Eval(n.Decl, env)
@@ -21,7 +21,7 @@ func Eval(node ast.Node, env Environment) Value {
 	case ast.Boolean:
 		return Boolean{Value: n.Value}
 	case ast.Ident:
-		return evalIdentifier(n, env)
+		return evalIdent(n, env)
 	case ast.BinOpExpr:
 		return evalBinOpExpr(n, env)
 	case ast.IfExpr:
@@ -41,20 +41,20 @@ func Eval(node ast.Node, env Environment) Value {
 	return nil
 }
 
-func evalLetDecl(d ast.LetDecl, env Environment) Value {
+func evalLetDecl(d ast.LetDecl, env Env) Value {
 	v := Eval(d.Expr, env)
 	env.Set(d.Id, v)
 	return v
 }
 
-func evalRecDecl(d ast.RecDecl, env Environment) Value {
-	emptyEnv := Environment{Store: make(map[ast.Ident]Value)}
+func evalRecDecl(d ast.RecDecl, env Env) Value {
+	emptyEnv := Env{Store: make(map[ast.Ident]Value)}
 	f := Function{Param: d.Param, Body: d.Body, Env: emptyEnv}
 	env.Set(d.Id, f)
 	return f
 }
 
-func evalIdentifier(i ast.Ident, env Environment) Value {
+func evalIdent(i ast.Ident, env Env) Value {
 	val, ok := env.Get(i)
 	if !ok {
 		log.Fatalf("variable %q is not bound", i.Value)
@@ -64,7 +64,7 @@ func evalIdentifier(i ast.Ident, env Environment) Value {
 
 // While the binary operator operands are not strictly required to be integers,
 // this program expects both operands to be integers.
-func evalBinOpExpr(e ast.BinOpExpr, env Environment) Value {
+func evalBinOpExpr(e ast.BinOpExpr, env Env) Value {
 	lv, ok := Eval(e.Left, env).(Integer)
 	if !ok {
 		log.Fatal("left operand is not Integer")
@@ -89,7 +89,7 @@ func evalBinOpExpr(e ast.BinOpExpr, env Environment) Value {
 	return nil
 }
 
-func evalIfExpr(e ast.IfExpr, env Environment) Value {
+func evalIfExpr(e ast.IfExpr, env Env) Value {
 	v, ok := Eval(e.Cond, env).(Boolean)
 	if !ok {
 		log.Fatal("condition is not Boolean")
@@ -102,13 +102,13 @@ func evalIfExpr(e ast.IfExpr, env Environment) Value {
 	return Eval(e.Alt, env)
 }
 
-func evalLetExpr(e ast.LetExpr, env Environment) Value {
+func evalLetExpr(e ast.LetExpr, env Env) Value {
 	v := Eval(e.Bind, env)
 	env.Set(e.Id, v)
 	return Eval(e.Body, env)
 }
 
-func evalAppExpr(e ast.AppExpr, env Environment) Value {
+func evalAppExpr(e ast.AppExpr, env Env) Value {
 	fn := Eval(e.Func, env)
 	arg := Eval(e.Arg, env)
 
@@ -121,8 +121,8 @@ func evalAppExpr(e ast.AppExpr, env Environment) Value {
 	return Eval(v.Body, env)
 }
 
-func evalLetRecExpr(e ast.LetRecExpr, env Environment) Value {
-	emptyEnv := Environment{Store: make(map[ast.Ident]Value)}
+func evalLetRecExpr(e ast.LetRecExpr, env Env) Value {
+	emptyEnv := Env{Store: make(map[ast.Ident]Value)}
 	f := Function{Param: e.Param, Body: e.Bind, Env: emptyEnv}
 	env.Set(e.Id, f)
 	return Eval(e.Body, env)

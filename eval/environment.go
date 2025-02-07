@@ -2,16 +2,16 @@ package eval
 
 import "go_type_inference/ast"
 
-type Environment struct {
+type Env struct {
 	Store map[ast.Ident]Value
 }
 
-func (e Environment) Get(k ast.Ident) (Value, bool) {
+func (e Env) Get(k ast.Ident) (Value, bool) {
 	v, ok := e.Store[k]
 	return v, ok
 }
 
-func (e Environment) Set(k ast.Ident, v Value) Value {
+func (e Env) Set(k ast.Ident, v Value) Value {
 	e.Store[k] = v
 	return v
 }

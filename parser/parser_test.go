@@ -150,9 +150,7 @@ func TestParse(t *testing.T) {
 							},
 						},
 					},
-					Arg: ast.Integer{
-						Value: 2,
-					},
+					Arg: ast.Integer{Value: 2},
 				},
 			},
 		},
